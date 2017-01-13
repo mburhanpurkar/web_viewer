@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 
-# Extracts the file names for produced by the plotter transform
-# For example, if three plotter transoforms are applied in a
-# single pipeline run, a list will be returned as follows:
-# [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
-#  [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
-#  [...]]
+
+# Misleading file name! Contains all the code for the web viewer!
 
 
 import json
@@ -15,12 +11,13 @@ app = Flask(__name__)
 
 
 def get_images(filename):
-    """Takes in the json file outputted whenever the pipeline is run
-    and extracts the names of plots that were produced by the plotter
-    transform. The output is a list of lists in which each constituent
-    list contains the set of images produced by a single call of the
-    plotter. This means each zoom level made for each transform is stored
-    in its own list."""
+
+    """Outputs a list of plot filenames based on the .json file produced
+    from pipeline runs. The output is in the following form:
+    [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
+     [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
+     [...]]
+     """
 
     json_file = open(filename).read()
     json_data = json.loads(json_file)
@@ -49,11 +46,14 @@ def get_images(filename):
             if 'bonsai_dedisperser' in transform['name'] and first_dedisperser:
                 first_dedisperser = False    # need to update to prevent from splitting the dedisperser zooms
             prev_tf_index = current_tf_index
+
     return fnames
 
 
 def print_fnames_nicely(fnames):
+
     """Prints each sub-list on its own."""
+
     for tf_group in fnames:
         for zoom_group in tf_group:
             for file in zoom_group:
@@ -66,32 +66,95 @@ def print_fnames_nicely(fnames):
 ######################################################################
 
 
+# Helpful global variables!
+
 fnames = get_images("rf_pipeline_0.json")
+min_zoom, min_index = 0, 0
+max_zoom = len(fnames[0])
+max_index = [[len(zoom) for zoom in transform] for transform in fnames]  # in the same format as fnames
+
+print
+
+# print "Len fnames (num transforms):  ", len(fnames)
+# print "Len fnames[0] (num zooms):    ", len(fnames[0])
+# print "Len fnames[0][0] (num tiles): ", len(fnames[0][0])
+
+
+######################################################################
+
+
+# Making the flask pages...
+
+
+def check_params(zoom, index):
+    if zoom >= max_zoom or zoom < min_zoom or index < min_index:
+        return False
+    # For whatever reason, there are differing number of plots for
+    # different transforms of the same zoom. This only returns false
+    # if there are absolutely no images left (i.e. it will return true
+    # if there is only one image available at a particular zoom because
+    # one transform happened to output more than the rest. This means
+    # we need to check again when we are displaying each individual
+    # image whether it exists.
+    if index >= max([element[zoom] for element in max_index]):
+        return False
+    return True
+
+
+def check_image(transform, zoom, index):
+    # This checks if a particular image is available
+    if zoom >= max_zoom or zoom < min_zoom or index < min_index or index >= max_index[transform][zoom]:
+        return False
+    return True
 
 
 @app.route('/bringup_series/<int:zoom>/<int:index>')
 def bringup_series(zoom, index):
+
+    """Tiled image viewer! Shows all of the plots prodiced from a pipeline
+    run at different zooms across varying time intervals."""
+
     urlList, extraUrlList = [], []
 
-    # NEED TO ADD LIMIT FOR EDGE CASES 
-
-
     for transform in range(len(fnames)):
-        urlList.append(url_for('static', filename='plots/%s' % (fnames[transform][zoom][index])))
+        if check_image(transform, zoom, index):
+            urlList.append(url_for('static', filename='plots/%s' % (fnames[transform][zoom][index])))
+        else:
+            urlList.append(None)
+
         display = '<h3>Displaying Zoom %d Index %d</h3>' % (zoom, index)
 
     for image in urlList:
-        display += '<img src="%s">\n' % image
+        if image is not None:
+            display += '<img src="%s">\n' % image
+        else:
+            display += 'Image Is Not Available'
 
-    # add links to next set of images
-    extraUrlList.append(url_for('bringup_series', zoom=zoom, index=index - 1))
-    extraUrlList.append(url_for('bringup_series', zoom=zoom, index=index + 1))
-    extraUrlList.append(url_for('bringup_series', zoom=zoom + 1, index=index * 2))
-    extraUrlList.append(url_for('bringup_series', zoom=zoom - 1, index=index // 2))
+    # Here, we check whether there are any images at a particular zoom or index
+    # This will return true even if there is only one image to display because
+    # one of the transforms outputted extra images. This is for the links at the
+    # bottom of the page pointing to another set of images.
+    if check_params(zoom, index - 1):
+        extraUrlList.append(url_for('bringup_series', zoom=zoom, index=index - 1))
+    else:
+        extraUrlList.append(None)
+    if check_params(zoom, index + 1):
+        extraUrlList.append(url_for('bringup_series', zoom=zoom, index=index + 1))
+    else:
+        extraUrlList.append(None)
+    if check_params(zoom + 1, index * 2):
+        extraUrlList.append(url_for('bringup_series', zoom=zoom + 1, index=index * 2))
+    else:
+        extraUrlList.append(None)
+    if check_params(zoom - 1, index // 2):
+        extraUrlList.append(url_for('bringup_series', zoom=zoom - 1, index=index // 2))
+    else:
+        extraUrlList.append(None)
 
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
     for i, extraImage in enumerate(['Prev Time', 'Next Time', 'Zoom In', 'Zoom Out']):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % (extraUrlList[i], extraImage)
+        if extraUrlList[i] is not None:
+            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % (extraUrlList[i], extraImage)
     display += ']</p> </center>'
 
     return display
@@ -99,4 +162,7 @@ def bringup_series(zoom, index):
 
 @app.route('/')
 def top():
+
+    """Home page! Need to update with links later..."""
+
     return "Hello, world!"
