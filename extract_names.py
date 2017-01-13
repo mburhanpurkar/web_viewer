@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-
-
-# Misleading file name! Contains all the code for the web viewer!
-
-
 import json
 from flask import Flask
 from flask import url_for
@@ -73,8 +68,6 @@ min_zoom, min_index = 0, 0
 max_zoom = len(fnames[0])
 max_index = [[len(zoom) for zoom in transform] for transform in fnames]  # in the same format as fnames
 
-print
-
 # print "Len fnames (num transforms):  ", len(fnames)
 # print "Len fnames[0] (num zooms):    ", len(fnames[0])
 # print "Len fnames[0][0] (num tiles): ", len(fnames[0][0])
@@ -87,22 +80,23 @@ print
 
 
 def check_params(zoom, index):
-    if zoom >= max_zoom or zoom < min_zoom or index < min_index:
-        return False
+    """Checks whether a link should be added at the bottom of the page
+    to the next set of images in the series."""
     # For whatever reason, there are differing number of plots for
     # different transforms of the same zoom. This only returns false
     # if there are absolutely no images left (i.e. it will return true
     # if there is only one image available at a particular zoom because
-    # one transform happened to output more than the rest. This means
+    # one transform happened to output more than the rest). This means
     # we need to check again when we are displaying each individual
     # image whether it exists.
-    if index >= max([element[zoom] for element in max_index]):
+    if zoom >= max_zoom or zoom < min_zoom or index < min_index or index >= max([element[zoom] for element in max_index]):
         return False
     return True
 
 
 def check_image(transform, zoom, index):
-    # This checks if a particular image is available
+    """Checks whether a particular image is available (because some transforms seem
+    to produce more plots than others)"""
     if zoom >= max_zoom or zoom < min_zoom or index < min_index or index >= max_index[transform][zoom]:
         return False
     return True
@@ -115,14 +109,14 @@ def bringup_series(zoom, index):
     run at different zooms across varying time intervals."""
 
     urlList, extraUrlList = [], []
+    display = '<h3>Displaying Zoom %d Index %d</h3>' % (zoom, index)
 
+    # First, get all the plots that need to be displayed (based on the link values)
     for transform in range(len(fnames)):
         if check_image(transform, zoom, index):
             urlList.append(url_for('static', filename='plots/%s' % (fnames[transform][zoom][index])))
         else:
             urlList.append(None)
-
-        display = '<h3>Displaying Zoom %d Index %d</h3>' % (zoom, index)
 
     for image in urlList:
         if image is not None:
@@ -130,6 +124,7 @@ def bringup_series(zoom, index):
         else:
             display += 'Image Is Not Available'
 
+    # Now, add the links at the bottom!
     # Here, we check whether there are any images at a particular zoom or index
     # This will return true even if there is only one image to display because
     # one of the transforms outputted extra images. This is for the links at the
@@ -152,6 +147,7 @@ def bringup_series(zoom, index):
         extraUrlList.append(None)
 
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
+
     for i, extraImage in enumerate(['Prev Time', 'Next Time', 'Zoom In', 'Zoom Out']):
         if extraUrlList[i] is not None:
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % (extraUrlList[i], extraImage)
