@@ -156,6 +156,18 @@ def bringup_series(zoom, index):
     return display
 
 
+@app.route('/display_triggers/<int:zoom>')
+def display_triggers(zoom):
+    """Displays all trigger plots at a given zoom horizontally."""
+    triggerList = fnames[-1]
+    display = '<center><table cellspacing="0" cellpadding="0"><tr>'
+    for trigger in triggerList[zoom]:
+        temp = url_for('static', filename='plots/%s' % trigger)
+        display += '<td><img src="%s"></td>' % temp
+    display += '</tr></table></center>'
+    return display
+
+
 @app.route('/')
 def top():
 
