@@ -108,7 +108,6 @@ def bringup_series(zoom, index):
     """Tiled image viewer! Shows all of the plots prodiced from a pipeline
     run at different zooms across varying time intervals."""
 
-    urlList, extraUrlList = [], []
     display = '<h3>Displaying Zoom %d Index %d</h3>' % (zoom, index)
 
     # First, get all the plots that need to be displayed (based on the link values)
@@ -121,30 +120,16 @@ def bringup_series(zoom, index):
     # Now, add the links at the bottom!
     # Here, we check whether there are any images at a particular zoom or index
     # This will return true even if there is only one image to display because
-    # one of the transforms outputted extra images. This is for the links at the
-    # bottom of the page pointing to another set of images.
-    if check_params(zoom, index - 1):
-        extraUrlList.append(url_for('bringup_series', zoom=zoom, index=index - 1))
-    else:
-        extraUrlList.append(None)
-    if check_params(zoom, index + 1):
-        extraUrlList.append(url_for('bringup_series', zoom=zoom, index=index + 1))
-    else:
-        extraUrlList.append(None)
-    if check_params(zoom + 1, index * 2):
-        extraUrlList.append(url_for('bringup_series', zoom=zoom + 1, index=index * 2))
-    else:
-        extraUrlList.append(None)
-    if check_params(zoom - 1, index // 2):
-        extraUrlList.append(url_for('bringup_series', zoom=zoom - 1, index=index // 2))
-    else:
-        extraUrlList.append(None)
-
+    # one of the transforms outputted extra images.
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
-
-    for i, extraImage in enumerate(['Prev Time', 'Next Time', 'Zoom In', 'Zoom Out']):
-        if extraUrlList[i] is not None:
-            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % (extraUrlList[i], extraImage)
+    if check_params(zoom, index - 1):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index=index - 1)), 'Prev Time')
+    if check_params(zoom, index + 1):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index=index + 1)), 'Next Time')
+    if check_params(zoom + 1, index * 2):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom + 1, index=index * 2)), 'Zoom In')
+    if check_params(zoom - 1, index // 2):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom - 1, index=index // 2)), 'Zoom Out')
     display += ']</p> </center>'
 
     return display
