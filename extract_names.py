@@ -5,6 +5,22 @@ from flask import url_for
 app = Flask(__name__)
 
 
+"""
+Okay! Looks like things are working!
+
+SETUP
+    mkdir static
+    cd static
+    ln -s /path/to/plots plots
+It is assumed that the .json file is in the directory of this code, but that can
+be modified by altering the call to get_images()
+
+The Index page is at: http://127.0.0.1:5000/.
+    Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 5)
+    Show triggers - displays all triggers at a specified zoom (defult: 0)
+"""
+
+
 def get_images(filename):
     """Outputs a list of plot filenames based on the .json file produced
     from pipeline runs. The output is in the following form:
@@ -98,8 +114,8 @@ def check_image(transform, zoom, index):
     return True
 
 
-@app.route('/bringup_series/<int:zoom>/<int:index1>/<int:index2>')
-def bringup_series(zoom, index1, index2):
+@app.route('/show_tiles/<int:zoom>/<int:index1>/<int:index2>')
+def show_tiles(zoom, index1, index2):
     """Tiled image viewer! Shows all of the plots prodiced from a pipeline
     run at different zooms across varying time intervals."""
     display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, zoom)
@@ -123,24 +139,24 @@ def bringup_series(zoom, index1, index2):
     # Plots to be linked
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 - 1):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
     if check_set(zoom, index1 + 1):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
     if check_set(zoom + 1, index1 * 2):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom + 1, index1=index1 * 2, index2=index2 * 2)), 'Zoom In')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom + 1, index1=index1 * 2, index2=index2 * 2)), 'Zoom In')
     if check_set(zoom - 1, index1 // 2):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom - 1, index1=index1 // 2, index2=index2 // 2)), 'Zoom Out')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom - 1, index1=index1 // 2, index2=index2 // 2)), 'Zoom Out')
     if check_set(zoom, index1 - (index2 - index1)):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Time travel! (past)')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Time travel! (past)')
     if check_set(zoom, index1 + (index2 - index1)):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Time travel! (future)')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Time travel! (future)')
     display += ']</p> </center>'
 
     return display
 
 
-@app.route('/display_triggers/<int:zoom>')
-def display_triggers(zoom):
+@app.route('/show_triggers/<int:zoom>')
+def show_triggers(zoom):
     """Displays all trigger plots at a given zoom horizontally."""
     triggerList = fnames[-1]
     display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % zoom
@@ -160,6 +176,6 @@ def display_triggers(zoom):
 def top():
     """Home page!"""
     s = '<h3>Hello, World!</h3>'
-    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-5)</a>\n' % url_for('bringup_series', zoom=0, index1=0, index2=5)
-    s += '<li> <a href="%s">Show triggers (default: zoom 0)</a>\n' % url_for('display_triggers', zoom=0)
+    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-5)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=5)
+    s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('show_triggers', zoom=0)
     return s
