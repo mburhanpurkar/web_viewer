@@ -6,14 +6,16 @@ app = Flask(__name__)
 
 
 """
-Okay! Looks like things are working!
-
 SETUP
     mkdir static
     cd static
     ln -s /path/to/plots plots
 It is assumed that the .json file is in the directory of this code, but that can
 be modified by altering the call to get_images()
+
+RUNNING
+    export FLASK_APP=extract_names.py
+    python -m flask run
 
 The Index page is at: http://127.0.0.1:5000/.
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 5)
@@ -33,7 +35,6 @@ def get_images(filename):
     transforms_list = json_data['transforms']
 
     prev_tf_index = 0
-
     fnames, zoom_group = [], []
     first_dedisperser = True
 
@@ -168,7 +169,6 @@ def show_triggers(zoom):
         temp = url_for('static', filename='plots/%s' % trigger)
         display += '<td><img src="%s"></td>' % temp
     display += '</tr></table>'
-
     return display
 
 
