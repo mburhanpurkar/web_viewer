@@ -103,7 +103,7 @@ def bringup_series(zoom, index1, index2):
     """Tiled image viewer! Shows all of the plots prodiced from a pipeline
     run at different zooms across varying time intervals."""
     display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, zoom)
-    display += '<table cellspacing="1" cellpadding="0">'
+    display += '<table cellspacing="0" cellpadding="0">'
 
     # Plots to be displayed
     for transform in range(len(fnames)):
@@ -112,10 +112,10 @@ def bringup_series(zoom, index1, index2):
             if check_image(transform, zoom, index):
                 display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s' % (fnames[transform][zoom][index]))
             else:
-                display += '<td>Image Is Not Available</td>'
-        display += '</tr>'
+                display += '<td>&nbsp;Plot Is Not Available&nbsp;</td>'
+        display += '</tr><tr><td>&nbsp;</td></tr>'
 
-    # Plots to be linked (baby steps)
+    # Plots to be linked
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 - 1):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
@@ -125,16 +125,13 @@ def bringup_series(zoom, index1, index2):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom + 1, index1=index1 * 2, index2=index2 * 2)), 'Zoom In')
     if check_set(zoom - 1, index1 // 2):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom - 1, index1=index1 // 2, index2=index2 // 2)), 'Zoom Out')
+    if check_set(zoom, index1 - (index2 - index1)):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Time travel! (past)')
+    if check_set(zoom, index1 + (index2 - index1)):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Time travel! (future)')
     display += ']</p> </center>'
 
-    # Plots to be linked (adult steps)
-
     return display
-
-
-"""
-<tr> img 0, img1, img2, img3 img4, img5 </tr>
-"""
 
 
 @app.route('/display_triggers/<int:zoom>')
@@ -153,5 +150,8 @@ def display_triggers(zoom):
 
 @app.route('/')
 def top():
-    """Home page! Need to update with links later..."""
-    return "Hello, world!"
+    """Home page!"""
+    s = '<h3>Hello, World!</h3>'
+    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-5)</a>\n' % url_for('bringup_series', zoom=0, index1=0, index2=5)
+    s += '<li> <a href="%s">Show triggers (default: zoom 0)</a>\n' % url_for('display_triggers', zoom=0)
+    return s
