@@ -108,6 +108,11 @@ def bringup_series(zoom, index1, index2):
     # Plots to be displayed
     for transform in range(len(fnames)):
         display += '<tr>'
+        # First, add plot names
+        for index in range(index1, index2 + 1):
+            if check_image(transform, zoom, index):
+                display += '<td>%s</td>' % fnames[transform][zoom][index]
+        display += '</tr>'
         for index in range(index1, index2 + 1):
             if check_image(transform, zoom, index):
                 display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s' % (fnames[transform][zoom][index]))
@@ -140,6 +145,9 @@ def display_triggers(zoom):
     triggerList = fnames[-1]
     display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % zoom
     display += '<table cellspacing="0" cellpadding="0"><tr>'
+    for plotname in triggerList[zoom]:
+        display += '<td>%s</td>' % plotname
+    display += '</tr>'
     for trigger in triggerList[zoom]:
         temp = url_for('static', filename='plots/%s' % trigger)
         display += '<td><img src="%s"></td>' % temp
