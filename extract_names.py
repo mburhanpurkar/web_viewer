@@ -114,13 +114,7 @@ def bringup_series(zoom, index):
     # First, get all the plots that need to be displayed (based on the link values)
     for transform in range(len(fnames)):
         if check_image(transform, zoom, index):
-            urlList.append(url_for('static', filename='plots/%s' % (fnames[transform][zoom][index])))
-        else:
-            urlList.append(None)
-
-    for image in urlList:
-        if image is not None:
-            display += '<img src="%s">\n' % image
+            display += '<img src="%s">\n' % url_for('static', filename='plots/%s' % (fnames[transform][zoom][index]))
         else:
             display += 'Image Is Not Available'
 
@@ -160,7 +154,8 @@ def bringup_series(zoom, index):
 def display_triggers(zoom):
     """Displays all trigger plots at a given zoom horizontally."""
     triggerList = fnames[-1]
-    display = '<center><table cellspacing="0" cellpadding="0"><tr>'
+    display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % zoom
+    display += '<center><table cellspacing="0" cellpadding="0"><tr>'
     for trigger in triggerList[zoom]:
         temp = url_for('static', filename='plots/%s' % trigger)
         display += '<td><img src="%s"></td>' % temp
