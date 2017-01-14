@@ -6,14 +6,12 @@ app = Flask(__name__)
 
 
 def get_images(filename):
-
     """Outputs a list of plot filenames based on the .json file produced
     from pipeline runs. The output is in the following form:
     [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
      [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
      [...]]
      """
-
     json_file = open(filename).read()
     json_data = json.loads(json_file)
     transforms_list = json_data['transforms']
@@ -21,7 +19,7 @@ def get_images(filename):
     prev_tf_index = 0
 
     fnames, zoom_group = [], []
-    first_dedisperser = True     # not nice, I know. Prevents dedisperser plots from being separated
+    first_dedisperser = True
 
     for i, transform in enumerate(transforms_list):
         if transform['name'] == 'plotter_transform' or 'bonsai_dedisperser' in transform['name']:
@@ -46,9 +44,7 @@ def get_images(filename):
 
 
 def print_fnames_nicely(fnames):
-
     """Prints each sub-list on its own."""
-
     for tf_group in fnames:
         for zoom_group in tf_group:
             for file in zoom_group:
@@ -79,7 +75,7 @@ max_index = [[len(zoom) for zoom in transform] for transform in fnames]  # in th
 # Making the flask pages...
 
 
-def check_params(zoom, index):
+def check_set(zoom, index):
     """Checks whether a link should be added at the bottom of the page
     to the next set of images in the series."""
     # For whatever reason, there are differing number of plots for
@@ -102,37 +98,43 @@ def check_image(transform, zoom, index):
     return True
 
 
-@app.route('/bringup_series/<int:zoom>/<int:index>')
-def bringup_series(zoom, index):
-
+@app.route('/bringup_series/<int:zoom>/<int:index1>/<int:index2>')
+def bringup_series(zoom, index1, index2):
     """Tiled image viewer! Shows all of the plots prodiced from a pipeline
     run at different zooms across varying time intervals."""
+    display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, zoom)
+    display += '<table cellspacing="1" cellpadding="0">'
 
-    display = '<h3>Displaying Zoom %d Index %d</h3>' % (zoom, index)
-
-    # First, get all the plots that need to be displayed (based on the link values)
+    # Plots to be displayed
     for transform in range(len(fnames)):
-        if check_image(transform, zoom, index):
-            display += '<img src="%s">\n' % url_for('static', filename='plots/%s' % (fnames[transform][zoom][index]))
-        else:
-            display += 'Image Is Not Available'
+        display += '<tr>'
+        for index in range(index1, index2 + 1):
+            if check_image(transform, zoom, index):
+                display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s' % (fnames[transform][zoom][index]))
+            else:
+                display += '<td>Image Is Not Available</td>'
+        display += '</tr>'
 
-    # Now, add the links at the bottom!
-    # Here, we check whether there are any images at a particular zoom or index
-    # This will return true even if there is only one image to display because
-    # one of the transforms outputted extra images.
+    # Plots to be linked (baby steps)
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
-    if check_params(zoom, index - 1):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index=index - 1)), 'Prev Time')
-    if check_params(zoom, index + 1):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index=index + 1)), 'Next Time')
-    if check_params(zoom + 1, index * 2):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom + 1, index=index * 2)), 'Zoom In')
-    if check_params(zoom - 1, index // 2):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom - 1, index=index // 2)), 'Zoom Out')
+    if check_set(zoom, index1 - 1):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
+    if check_set(zoom, index1 + 1):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
+    if check_set(zoom + 1, index1 * 2):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom + 1, index1=index1 * 2, index2=index2 * 2)), 'Zoom In')
+    if check_set(zoom - 1, index1 // 2):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('bringup_series', zoom=zoom - 1, index1=index1 // 2, index2=index2 // 2)), 'Zoom Out')
     display += ']</p> </center>'
 
+    # Plots to be linked (adult steps)
+
     return display
+
+
+"""
+<tr> img 0, img1, img2, img3 img4, img5 </tr>
+"""
 
 
 @app.route('/display_triggers/<int:zoom>')
@@ -140,17 +142,16 @@ def display_triggers(zoom):
     """Displays all trigger plots at a given zoom horizontally."""
     triggerList = fnames[-1]
     display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % zoom
-    display += '<center><table cellspacing="0" cellpadding="0"><tr>'
+    display += '<table cellspacing="0" cellpadding="0"><tr>'
     for trigger in triggerList[zoom]:
         temp = url_for('static', filename='plots/%s' % trigger)
         display += '<td><img src="%s"></td>' % temp
-    display += '</tr></table></center>'
+    display += '</tr></table>'
+
     return display
 
 
 @app.route('/')
 def top():
-
     """Home page! Need to update with links later..."""
-
     return "Hello, world!"
