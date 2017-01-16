@@ -210,8 +210,11 @@ def show_triggers(zoom):
 
     for i, trigger in enumerate(triggerList[zoom]):
         temp = url_for('static', filename='plots/%s' % trigger)
-        temp_link = url_for('show_tiles', zoom=zoom, index1=i - 2, index2=i + 2)
-        display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
+        if i > 1 and i < max_index[-1][zoom] - 2:
+            temp_link = url_for('show_tiles', zoom=zoom, index1=i - 2, index2=i + 2)
+            display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
+        else:
+            display += '<td><img src="%s"></td>' % temp
         current_row += 1
         if (current_row - last_row) == 4:
             last_row = current_row
