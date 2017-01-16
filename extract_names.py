@@ -125,15 +125,15 @@ def show_tiles(zoom, index1, index2):
     display += '<table cellspacing="0" cellpadding="0">'
 
     # Plots to be displayed
-    for transform in range(len(fnames)):
+    for transform in reversed(range(len(fnames))):
         display += '<tr>'
         # First, add plot names
-        for index in range(index1, index2 + 1):
+        for index in reversed(range(index1, index2 + 1)):
             if check_image(transform, zoom, index):
                 display += '<td>%s</td>' % fnames[transform][zoom][index]
         display += '</tr>'
         # Now, add the images
-        for index in range(index1, index2 + 1):
+        for index in reversed(range(index1, index2 + 1)):
             if check_image(transform, zoom, index):
                 display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s' % (fnames[transform][zoom][index]))
         display += '</tr><tr><td>&nbsp;</td></tr>'
