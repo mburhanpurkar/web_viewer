@@ -142,16 +142,28 @@ def show_tiles(zoom, index1, index2):
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 - 1):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
+    else:
+        display += 'Prev Time&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 + 1):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
+    else:
+        display += 'Next Time&nbsp;&nbsp;&nbsp;'
     if check_set(zoom + 1, index1 * 2):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom + 1, index1=index1 * 2, index2=index2 * 2)), 'Zoom In')
+    else:
+        display += 'Zoom In&nbsp;&nbsp;&nbsp;'
     if check_set(zoom - 1, index1 // 2):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom - 1, index1=index1 // 2, index2=index2 // 2)), 'Zoom Out')
+    else:
+        display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 - (index2 - index1)):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Time travel! (past)')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Jump Back')
+    else:
+        display += 'Jump Back&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 + (index2 - index1)):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Time travel! (future)')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Jump Forward')
+    else:
+        display += 'Jump Forward&nbsp;&nbsp;&nbsp;'
     display += ']</p> </center>'
     return display
 
