@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import json
+from math import ceil
 from flask import Flask
 from flask import url_for
 app = Flask(__name__)
@@ -140,31 +141,59 @@ def show_tiles(zoom, index1, index2):
 
     # Plots to be linked
     display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
+
     if check_set(zoom, index1 - 1):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles',
+                    zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
     else:
         display += 'Prev Time&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 + 1):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles',
+                    zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
     else:
         display += 'Next Time&nbsp;&nbsp;&nbsp;'
-    if check_set(zoom + 1, index1 * 2):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom + 1, index1=index1 * 2, index2=index2 * 2)), 'Zoom In')
-    else:
-        display += 'Zoom In&nbsp;&nbsp;&nbsp;'
-    if check_set(zoom - 1, index1 // 2):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom - 1, index1=index1 // 2, index2=index2 // 2)), 'Zoom Out')
-    else:
-        display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
+
     if check_set(zoom, index1 - (index2 - index1)):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Jump Back')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles',
+                    zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Jump Back')
     else:
         display += 'Jump Back&nbsp;&nbsp;&nbsp;'
     if check_set(zoom, index1 + (index2 - index1)):
-        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Jump Forward')
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles',
+                    zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Jump Forward')
     else:
         display += 'Jump Forward&nbsp;&nbsp;&nbsp;'
+
+    # For making the zooming preserve column number
+    if (index2 - index1) % 2 == 0:
+        new_index1 = index1 * 2 + (index2 - index1) / 2
+        new_index2 = index2 * 2 - (index2 - index1) / 2
+    else:
+        new_index1 = index1 * 2 + ceil(index2 - index1) / 2 + 1
+        new_index2 = index2 * 2 - ceil(index2 - index1) / 2 + 1
+
+    if check_set(zoom + 1, index1 * 2):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles',
+                    zoom=zoom + 1, index1=new_index1, index2=new_index2)), 'Zoom In')
+    else:
+        display += 'Zoom In&nbsp;&nbsp;&nbsp;'
+
+    # More column preservation
+    if (index2 - index1) % 2 == 0:
+        new_index1 = (index1 - (index2 - index1) / 2) / 2
+        new_index2 = (index2 + (index2 - index1) / 2) / 2
+    else:
+        new_index1 = (index1 - ceil((index2 - index1) / 2)) / 2
+        new_index2 = (index2 + (ceil((index2 - index1) / 2) + 1)) / 2
+
+    if check_set(zoom - 1, index1 // 2):
+        display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles',
+                    zoom=zoom - 1, index1=new_index1, index2=new_index2)), 'Zoom Out')
+    else:
+        display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
+
     display += ']</p> </center>'
+
     return display
 
 
