@@ -204,15 +204,19 @@ def show_triggers(zoom):
     triggerList = fnames[-1]
     display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % zoom
     display += '<table cellspacing="0" cellpadding="0"><tr>'
-    # Names
-    for plotname in triggerList[zoom]:
-        display += '<td>%s</td>' % plotname
-    display += '</tr>'
-    # Images
+
+    last_row = 0
+    current_row = 0
+
     for trigger in triggerList[zoom]:
         temp = url_for('static', filename='plots/%s' % trigger)
         display += '<td><img src="%s"></td>' % temp
+        current_row += 1
+        if (current_row - last_row) == 4:
+            last_row = current_row
+            display += '</tr><tr><td>&nbsp;</td></tr><tr>'
     display += '</tr></table>'
+
     return display
 
 
