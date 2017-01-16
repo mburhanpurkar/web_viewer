@@ -56,7 +56,6 @@ def get_images(filename):
             if 'bonsai_dedisperser' in transform['name'] and first_dedisperser:
                 first_dedisperser = False    # need to update to prevent from splitting the dedisperser zooms
             prev_tf_index = current_tf_index
-
     return fnames
 
 
@@ -118,7 +117,10 @@ def check_image(transform, zoom, index):
 @app.route('/show_tiles/<int:zoom>/<int:index1>/<int:index2>')
 def show_tiles(zoom, index1, index2):
     """Tiled image viewer! Shows all of the plots prodiced from a pipeline
-    run at different zooms across varying time intervals."""
+    run at different zooms across varying time intervals. The range of pictures
+    shown can be changed to any values in the url (index1 is the index of the
+    first image shown and index2 is the index of the last and defaults are set
+    to 0 and 3 for the link accessef from the home page). """
     display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, zoom)
     display += '<table cellspacing="0" cellpadding="0">'
 
@@ -130,11 +132,10 @@ def show_tiles(zoom, index1, index2):
             if check_image(transform, zoom, index):
                 display += '<td>%s</td>' % fnames[transform][zoom][index]
         display += '</tr>'
+        # Now, add the images
         for index in range(index1, index2 + 1):
             if check_image(transform, zoom, index):
                 display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s' % (fnames[transform][zoom][index]))
-            else:
-                display += '<td>&nbsp;Plot Is Not Available&nbsp;</td>'
         display += '</tr><tr><td>&nbsp;</td></tr>'
 
     # Plots to be linked
@@ -152,19 +153,21 @@ def show_tiles(zoom, index1, index2):
     if check_set(zoom, index1 + (index2 - index1)):
         display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('show_tiles', zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Time travel! (future)')
     display += ']</p> </center>'
-
     return display
 
 
 @app.route('/show_triggers/<int:zoom>')
 def show_triggers(zoom):
-    """Displays all trigger plots at a given zoom horizontally."""
+    """Displays all trigger plots at a given zoom horizontally.
+    The zoom level can be changed by changing the value in the url."""
     triggerList = fnames[-1]
     display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % zoom
     display += '<table cellspacing="0" cellpadding="0"><tr>'
+    # Names
     for plotname in triggerList[zoom]:
         display += '<td>%s</td>' % plotname
     display += '</tr>'
+    # Images
     for trigger in triggerList[zoom]:
         temp = url_for('static', filename='plots/%s' % trigger)
         display += '<td><img src="%s"></td>' % temp
@@ -176,6 +179,6 @@ def show_triggers(zoom):
 def top():
     """Home page!"""
     s = '<h3>Hello, World!</h3>'
-    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-5)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=5)
+    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-3)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=3)
     s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('show_triggers', zoom=0)
     return s
