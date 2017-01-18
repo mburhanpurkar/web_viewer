@@ -7,6 +7,11 @@ app = Flask(__name__)
 
 
 """
+This is a modified version of the web viewer that (probably) works for the new plotter. 
+It hasn't been tested with multiple plotter transforms yet, but it definitely groups the
+different zoom levels for a single transform properly. This does not handle the bonsai
+dedisperser as it does not use the python plotter transform. 
+
 SETUP
     mkdir static
     cd static
@@ -34,29 +39,23 @@ def get_images(filename):
     json_file = open(filename).read()
     json_data = json.loads(json_file)
     transforms_list = json_data['transforms']
-
-    prev_tf_index = 0
-    fnames, zoom_group = [], []
-    first_dedisperser = True
-
-    for i, transform in enumerate(transforms_list):
-        if transform['name'] == 'plotter_transform' or 'bonsai_dedisperser' in transform['name']:
-            current_tf_index = i
-            if current_tf_index == 1 or current_tf_index != prev_tf_index + 1 or ('bonsai_dedisperser' in transform['name'] and first_dedisperser):
-                # we need to start a new list for a new transform
+    fnames = []
+  
+    for transform in transforms_list:
+        # This will iterate over all the transforms
+        if transform['name'] == 'plotter_transform': # bonsai_dedisperser doesn't use plotter function... or 'bonsai_dedisperser' in transform['name']:
+            # start a new list for a new transform
+            # now, we need to iterate over each zoom level
+            transform_group = []
+            for zoom_level in transform['plots']:
+                # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
                 zoom_group = []
-                for plot in transform['plots'][0]['files'][0]:
-                    zoom_group.append(plot['filename'][2:])
-                fnames.append([zoom_group])
-            else:
-                # we need to add to the current transform's list
-                zoom_group = []
-                for plot in transform['plots'][0]['files'][0]:
-                    zoom_group.append(plot['filename'][2:])
-                fnames[-1].append(zoom_group)
-            if 'bonsai_dedisperser' in transform['name'] and first_dedisperser:
-                first_dedisperser = False    # need to update to prevent from splitting the dedisperser zooms
-            prev_tf_index = current_tf_index
+                for file_info in zoom_level['files'][0]:
+                    # now, we can finally access the file names :)
+                    name = file_info['filename'][2:]
+                    zoom_group.append(name)
+                transform_group.append(zoom_group)
+            fnames.append(transform_group)
     return fnames
 
 
@@ -76,7 +75,11 @@ def print_fnames_nicely(fnames):
 
 # Helpful global variables!
 
-fnames = get_images("rf_pipeline_0.json")
+fnames = get_images("static/plots/rf_pipeline_0.json")
+print fnames
+print 
+print 
+print_fnames_nicely(fnames)
 min_zoom, min_index = 0, 0
 max_zoom = len(fnames[0])
 max_index = [[len(zoom) for zoom in transform] for transform in fnames]  # in the same format as fnames
