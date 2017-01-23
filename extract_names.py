@@ -28,13 +28,14 @@ be modified by altering the call to get_images()
 RUNNING
     ./extract_names.py
 
-The Index page is at: localhost:5000/web/. (I know this is weird - flask-classy makes default urls...I will fix soon)
+The Index page is at: localhost:5000/. 
+    (Note: the class is called View because classy makes the base url the prefix to "View" in the class name.)
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom (defult: 0)
 """
 
 
-class WebView(FlaskView):
+class View(FlaskView):
     def __init__(self, path='static/plots'):
         self.fnames = self._get_files(path)
         self.min_zoom, self.min_index = 0, 0
@@ -77,23 +78,23 @@ class WebView(FlaskView):
         display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
 
         if self._check_set(zoom, index1 - 1):
-            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('WebView:show_tiles',
+            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
                         zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
         else:
             display += 'Prev Time&nbsp;&nbsp;&nbsp;'
         if self._check_set(zoom, index1 + 1):
-            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('WebView:show_tiles',
+            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
                         zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
         else:
             display += 'Next Time&nbsp;&nbsp;&nbsp;'
 
         if self._check_set(zoom, index1 - (index2 - index1)):
-            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('WebView:show_tiles',
+            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
                         zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Jump Back')
         else:
             display += 'Jump Back&nbsp;&nbsp;&nbsp;'
         if self._check_set(zoom, index1 + (index2 - index1)):
-            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('WebView:show_tiles',
+            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
                         zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Jump Forward')
         else:
             display += 'Jump Forward&nbsp;&nbsp;&nbsp;'
@@ -107,7 +108,7 @@ class WebView(FlaskView):
             new_index2 = index2 * 2 - ceil(index2 - index1) / 2 + 1
 
         if self._check_set(zoom + 1, index1 * 2):
-            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('WebView:show_tiles',
+            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
                         zoom=zoom + 1, index1=new_index1, index2=new_index2)), 'Zoom In')
         else:
             display += 'Zoom In&nbsp;&nbsp;&nbsp;'
@@ -121,7 +122,7 @@ class WebView(FlaskView):
             new_index2 = (index2 + (ceil((index2 - index1) / 2) + 1)) / 2
 
         if self._check_set(zoom - 1, index1 // 2):
-            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('WebView:show_tiles',
+            display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
                         zoom=zoom - 1, index1=new_index1, index2=new_index2)), 'Zoom Out')
         else:
             display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
@@ -146,7 +147,7 @@ class WebView(FlaskView):
         for i, trigger in enumerate(triggerList[zoom]):
             temp = url_for('static', filename='plots/%s' % trigger)
             if i > 1 and i < self.max_index[-1][zoom] - 2:
-                temp_link = url_for('show_tiles', zoom=zoom, index1=i - 2, index2=i + 2)
+                temp_link = url_for('View:show_tiles', zoom=zoom, index1=i - 2, index2=i + 2)
                 display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
             else:
                 display += '<td><img src="%s"></td>' % temp
@@ -161,8 +162,8 @@ class WebView(FlaskView):
 
     def index(self):
         """Home page!"""
-        s = '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-4)</a>\n' % url_for('WebView:show_tiles', zoom=0, index1=0, index2=4)
-        s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('WebView:show_triggers', zoom=0)
+        s = '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-4)</a>\n' % url_for('View:show_tiles', zoom=0, index1=0, index2=4)
+        s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('View:show_triggers', zoom=0)
         return s
 
 
@@ -230,7 +231,7 @@ class WebView(FlaskView):
         return s
 
 
-WebView.register(app)
+View.register(app)
 if __name__ == '__main__':
     app.run()
 
