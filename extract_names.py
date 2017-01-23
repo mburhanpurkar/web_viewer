@@ -233,6 +233,6 @@ def show_triggers(zoom):
 def top():
     """Home page!"""
     s = '<h3>Hello, World!</h3>'
-    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-3)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=4)
+    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-4)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=4)
     s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('show_triggers', zoom=0)
     return s
