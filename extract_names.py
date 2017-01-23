@@ -7,10 +7,11 @@ app = Flask(__name__)
 
 
 """
-This is a modified version of the web viewer that (probably) works for the new plotter. 
+This is a modified version of the web viewer that works for the new plotter. 
 It hasn't been tested with multiple plotter transforms yet, but it definitely groups the
 different zoom levels for a single transform properly. This does not handle the bonsai
-dedisperser as it does not use the python plotter transform. 
+dedisperser as it does not use the python plotter transform (the triggers page will 
+just show the last transform in the fnames list). 
 
 SETUP
     mkdir static
@@ -24,7 +25,7 @@ RUNNING
     python -m flask run
 
 The Index page is at: http://127.0.0.1:5000/.
-    Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 5)
+    Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom (defult: 0)
 """
 
@@ -55,6 +56,7 @@ def get_images(filename):
                     name = file_info['filename'][2:]
                     zoom_group.append(name)
                 transform_group.append(zoom_group)
+            transform_group.reverse()   # accounts for the way the zoom levels are added in the plotter (zoom 0 is the most zoomed out now)
             fnames.append(transform_group)
     return fnames
 
@@ -231,6 +233,6 @@ def show_triggers(zoom):
 def top():
     """Home page!"""
     s = '<h3>Hello, World!</h3>'
-    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-3)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=3)
+    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-3)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=4)
     s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('show_triggers', zoom=0)
     return s
