@@ -8,10 +8,10 @@ app = Flask(__name__)
 
 """
 This is a modified version of the web viewer that works for the new plotter. 
-It hasn't been tested with multiple plotter transforms yet, but it definitely groups the
-different zoom levels for a single transform properly. This does not handle the bonsai
-dedisperser as it does not use the python plotter transform (the triggers page will 
-just show the last transform in the fnames list). 
+
+This does not  handle the bonsai dedisperser as it does not use the python 
+plotter transform (the triggers page will just show the last transform in
+the fnames list). 
 
 SETUP
     mkdir static
@@ -22,9 +22,9 @@ be modified by altering the call to get_images()
 
 RUNNING
     export FLASK_APP=extract_names.py
-    python -m flask run
+    flask run --host=0.0.0.0
 
-The Index page is at: http://127.0.0.1:5000/.
+The Index page is at: frb1.physics.mcgill.ca:5000/.
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom (defult: 0)
 """
@@ -36,7 +36,8 @@ def get_images(filename):
     [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
      [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
      [...]]
-     """
+    Currently does not handle the bonsai dedisperser. 
+    """
     json_file = open(filename).read()
     json_data = json.loads(json_file)
     transforms_list = json_data['transforms']
@@ -68,19 +69,13 @@ def print_fnames_nicely(fnames):
             for file in zoom_group:
                 print file,
             print
-        print
-        print
+        print '\n\n'
 
 
 ######################################################################
 
 
-# Helpful global variables!
-
 fnames = get_images("static/plots/rf_pipeline_0.json")
-print fnames
-print 
-print 
 print_fnames_nicely(fnames)
 min_zoom, min_index = 0, 0
 max_zoom = len(fnames[0])
@@ -94,11 +89,8 @@ max_index = [[len(zoom) for zoom in transform] for transform in fnames]  # in th
 ######################################################################
 
 
-# Making the flask pages...
-
-
 def check_set(zoom, index):
-    """Checks whether a link should be added at the bottom of the page
+    """Checks whether a link should be added at the top of the page
     to the next set of images in the series."""
     # For whatever reason, there are differing number of plots for
     # different transforms of the same zoom. This only returns false
@@ -122,16 +114,15 @@ def check_image(transform, zoom, index):
 
 @app.route('/show_tiles/<int:zoom>/<int:index1>/<int:index2>')
 def show_tiles(zoom, index1, index2):
-    """Tiled image viewer! Shows all of the plots prodiced from a pipeline
+    """Tiled image viewer! Shows all of the plots produced from a pipeline
     run at different zooms across varying time intervals. The range of pictures
     shown can be changed to any values in the url (index1 is the index of the
     first image shown and index2 is the index of the last and defaults are set
-    to 0 and 3 for the link accessef from the home page). """
+    to 0 and 4 for the link accessed from the home page). """
     display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, zoom)
     display += '<table cellspacing="0" cellpadding="0">'
 
-    # Plots to be displayed
-    for transform in reversed(range(len(fnames))):
+    for transform in reversed(range(len(fnames))):    # reversed to show triggers first
         display += '<tr>'
         # First, add plot names
         for index in range(index1, index2 + 1):
@@ -232,7 +223,6 @@ def show_triggers(zoom):
 @app.route('/')
 def top():
     """Home page!"""
-    s = '<h3>Hello, World!</h3>'
-    s += '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-4)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=4)
+    s = '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-4)</a>\n' % url_for('show_tiles', zoom=0, index1=0, index2=4)
     s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('show_triggers', zoom=0)
     return s
