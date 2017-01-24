@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import json
+import sys 
+from json import loads
 from math import ceil
 from flask import Flask
 from flask import url_for
@@ -35,7 +36,12 @@ The Index page is at: localhost:5000/.
 """
 
 
-class View(FlaskView):
+class Parser():
+    """
+    This gets fnames (the list of file names at different zoom levels produced by the plotter transform)
+    and helpful min/max index and room values by reading from the json file.
+    It is also handy because it prevents the files from being re-parsed for each webpage View creates! 
+    """
     def __init__(self, path='static/plots'):
         self.fnames = self._get_files(path)
         self.min_zoom, self.min_index = 0, 0
@@ -46,7 +52,56 @@ class View(FlaskView):
         # print "Len fnames (num transforms):  ", len(self.fnames)
         # print "Len fnames[0] (num zooms):    ", len(self.fnames[0])
         # print "Len fnames[0][0] (num tiles): ", len(self.fnames[0][0])
+        
+    def _get_files(self, path):
+        """Outputs a list of plot filenames based on the .json file produced
+        from pipeline runs. The output is in the following form:
+        [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
+         [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
+         [...]]
+        Currently does not handle the bonsai dedisperser.
+        """
+        json_file = open(path + '/rf_pipeline_0.json').read()
+        json_data = loads(json_file)
+        transforms_list = json_data['transforms']
+        fnames = []
 
+        for transform in transforms_list:
+            # This will iterate over all the transforms
+            if transform['name'] == 'plotter_transform':
+                # Start a new list for a new transform
+                transform_group = []
+                for zoom_level in transform['plots']:
+                    # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
+                    zoom_group = []
+                    for file_info in zoom_level['files'][0]:
+                        # We can finally access the file names :)
+                        name = file_info['filename']
+                        zoom_group.append(name)
+                    transform_group.append(zoom_group)
+                # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
+                # most-zoomed-out.  The web viewer uses the opposite convention, so we reverse the order here.
+                transform_group.reverse()
+                fnames.append(transform_group)
+        return fnames
+
+    def __str__(self):
+        for tf_group in self.fnames:
+            for zoom_group in tf_group:
+                for file in zoom_group:
+                    s += file,
+                s += '\n'
+            s += '\n\n'
+        return s
+
+
+class View(FlaskView):
+    def __init__(self):
+        self.fnames = files.fnames
+        self.min_zoom = files.min_zoom
+        self.min_index = files.min_index
+        self.max_zoom = files.max_zoom
+        self.max_index = files.max_index
 
     def show_tiles(self, zoom, index1, index2):
         """Tiled image viewer! Shows all of the plots produced from a pipeline
@@ -131,7 +186,6 @@ class View(FlaskView):
 
         return display
 
-
     def show_triggers(self, zoom):
         """Displays all trigger plots at a given zoom horizontally.
         The zoom level can be changed by changing the value in the url."""
@@ -159,47 +213,11 @@ class View(FlaskView):
 
         return display
 
-
     def index(self):
         """Home page!"""
         s = '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-4)</a>\n' % url_for('View:show_tiles', zoom=0, index1=0, index2=4)
         s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('View:show_triggers', zoom=0)
         return s
-
-
-    def _get_files(self, path):
-        """Outputs a list of plot filenames based on the .json file produced
-        from pipeline runs. The output is in the following form:
-        [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
-         [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
-         [...]]
-        Currently does not handle the bonsai dedisperser.
-        """
-        json_file = open(path + '/rf_pipeline_0.json').read()
-        json_data = json.loads(json_file)
-        transforms_list = json_data['transforms']
-        fnames = []
-
-        for transform in transforms_list:
-            # This will iterate over all the transforms
-            if transform['name'] == 'plotter_transform':
-                # Start a new list for a new transform
-                transform_group = []
-                for zoom_level in transform['plots']:
-                    # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
-                    zoom_group = []
-                    for file_info in zoom_level['files'][0]:
-                        # We can finally access the file names :)
-                        name = file_info['filename']
-                        zoom_group.append(name)
-                    transform_group.append(zoom_group)
-                    
-                # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
-                # most-zoomed-out.  The web viewer uses the opposite convention, so we reverse the order here.
-                transform_group.reverse()
-                fnames.append(transform_group)
-        return fnames
-
 
     def _check_set(self, zoom, index):
         """Checks whether a link should be added at the top of the page
@@ -215,7 +233,6 @@ class View(FlaskView):
             return False
         return True
 
-
     def _check_image(self, transform, zoom, index):
         """Checks whether a particular image is available (because some transforms seem
         to produce more plots than others)"""
@@ -224,16 +241,8 @@ class View(FlaskView):
         return True
 
 
-    def __str__(self):
-        for tf_group in self.fnames:
-            for zoom_group in tf_group:
-                for file in zoom_group:
-                    s += file,
-                s += '\n'
-            s += '\n\n'
-        return s
 
-
-View.register(app)
 if __name__ == '__main__':
-    app.run()
+    files = Parser()  # temporary poor form until I can figure out how to pass this to __init__ for View
+    View.register(app)
+    app.run(host='0.0.0.0', port=5001, debug=False)
