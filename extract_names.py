@@ -193,6 +193,9 @@ class View(FlaskView):
                         name = file_info['filename'][2:]
                         zoom_group.append(name)
                     transform_group.append(zoom_group)
+                    
+                # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
+                # most-zoomed-out.  The web viewer uses the opposite convention, so we reverse the order here.
                 transform_group.reverse()
                 fnames.append(transform_group)
         return fnames
