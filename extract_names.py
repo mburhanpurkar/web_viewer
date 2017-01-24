@@ -190,7 +190,7 @@ class View(FlaskView):
                     zoom_group = []
                     for file_info in zoom_level['files'][0]:
                         # We can finally access the file names :)
-                        name = file_info['filename'][2:]
+                        name = file_info['filename']
                         zoom_group.append(name)
                     transform_group.append(zoom_group)
                     
