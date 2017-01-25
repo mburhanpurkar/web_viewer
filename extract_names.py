@@ -67,7 +67,7 @@ class Parser():
     and helpful min/max index and room values by reading from the json file.
     It is also handy because it prevents the files from being re-parsed for each webpage View creates! 
     """
-    def __init__(self, path='static/plots'):
+    def __init__(self, path):
         self.fnames = self._get_files(path)
         self.min_zoom, self.min_index = 0, 0
         self.max_zoom = len(self.fnames[0])
@@ -173,7 +173,7 @@ class View(FlaskView):
             # Now, add the images
             for index in range(index1, index2 + 1):
                 if self._check_image(transform, zoom, index):
-                    display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s' % (self.fnames[transform][zoom][index]))
+                    display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s/%s/%s' % (user, run, self.fnames[transform][zoom][index]))
             display += '</tr><tr><td>&nbsp;</td></tr>'
 
         # Plots to be linked
@@ -249,7 +249,7 @@ class View(FlaskView):
         current_row = 0
 
         for i, trigger in enumerate(triggerList[zoom]):
-            temp = url_for('static', filename='plots/%s' % trigger)
+            temp = url_for('static', filename='plots/%s/%s/%s' % (user, run, trigger))
             if i > 1 and i < self.max_index[-1][zoom] - 2:
                 temp_link = url_for('View:show_tiles', user=user, run=run, zoom=zoom, index1=i - 2, index2=i + 2)
                 display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
