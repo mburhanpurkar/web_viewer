@@ -9,23 +9,24 @@ app = Flask(__name__)
 
 
 """
-(Will update this bit later...)
-This is a modified version of the web viewer that works for the new plotter.
+This is a modified version of the web viewer that works for the new plotter 
+and the /data2/web_viewer directory. Running will display a list of users, 
+each with a list of pipeline runs in their directories.
 
-This does not  handle the bonsai dedisperser as it does not use the python
-plotter transform (the triggers page will just show the last transform in
-the fnames list).
+Both show_tiles (show all plots) and show_triggers (show the last set of 
+plots made) can be viewed, but this does not handle the bonsai dedisperser
+outouts as it does not use the python plotter transform (the triggers page 
+will just show the last transform in the fnames list).
 
 DEPENDENCIES
 Flask (pip install Flask)
 Flask-Classy (pip install flask-classy)
 
-SETUP (will update later...)
+SETUP
+In your web_viewer directory, 
     mkdir static
     cd static
-    ln -s /path/to/plots plots
-It is assumed that the .json file is in the directory of this code, but that can
-be modified by altering the call to get_images()
+    ln -s /data2/web_viewer plots
 
 RUNNING
     ./extract_names.py
@@ -37,29 +38,6 @@ The Index page is at: localhost:5001/.
 """
 
 
-class Crawler():
-    """
-    A class has been made here because I thought it might be fun to add metadata at some point! 
-    Can just be added to Parser if not needed.
-    """
-    def __init__(self, path='static/plots'):
-        self.pipeline_dir = self._get_dirs(path)
-    
-    def _get_dirs(self, path):
-        """
-        Gets the user directories and the names of the pipeline directories in them. Not recursive! Just 
-        searches two layers of directories! 
-        The dictionary returned is in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
-        """
-        pipeline_dir = dict()
-        for user in walk(path).next()[1]:
-            temp_usr_data = dict()
-            for run in walk('%s/%s' % (path, user)).next()[1]:
-                temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
-            pipeline_dir[user] = temp_usr_data
-        return pipeline_dir
-
-        
 class Parser():
     """
     This gets fnames (the list of file names at different zoom levels produced by the plotter transform)
@@ -119,6 +97,27 @@ class Parser():
         return s
 
 
+class Crawler():
+    """
+    Searches the two top directories pointed to by plots (assumed to be users -> pipeline runs). 
+    Parser() is called for each pipeline run, creating a dictionary with information about 
+    each pipeline run for each user. 
+    Separate class here because I thought it might be nice for it to get other interesting metadata
+    at some point. Could just be added to Parser if not. 
+    """
+    def __init__(self, path='static/plots'):
+        self.pipeline_dir = self._get_dirs(path)
+    
+    def _get_dirs(self, path):
+        pipeline_dir = dict()
+        for user in walk(path).next()[1]:
+            temp_usr_data = dict()
+            for run in walk('%s/%s' % (path, user)).next()[1]:
+                temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
+            pipeline_dir[user] = temp_usr_data
+        return pipeline_dir
+
+
 class View(FlaskView):
     def _get_run_info(self, user, run):
         # Get parser object
@@ -159,7 +158,7 @@ class View(FlaskView):
         index1 = int(index1)
         index2 = int(index2)
 
-        display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, zoom)
+        display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, (self.max_zoom - zoom - 1))  # account for resversal of zoom order in plotter
         display += '<table cellspacing="0" cellpadding="0">'
 
         for transform in reversed(range(len(self.fnames))):    # reversed to show triggers first
@@ -241,7 +240,7 @@ class View(FlaskView):
         zoom = int(zoom)
 
         triggerList = self.fnames[-1]
-        display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % zoom
+        display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % (self.max_zoom - zoom - 1)
         display += '<table cellspacing="0" cellpadding="0"><tr>'
 
         last_row = 0
@@ -287,6 +286,6 @@ class View(FlaskView):
 
 
 if __name__ == '__main__':
-    dirs = Crawler()
-    View.register(app)
+    dirs = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
+    View.register(app)   # making it a global variable until I figure out how to pass it to View without flask yelling at me
     app.run(host='0.0.0.0', port=5001, debug=False)
