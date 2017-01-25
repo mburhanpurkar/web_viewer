@@ -53,11 +53,10 @@ class Crawler():
         """
         pipeline_dir = dict()
         for user in walk(path).next()[1]:
-            if user != 'web_viewer':
-                temp_usr_data = dict()
-                for run in walk('%s/%s' % (path, user)).next()[1]:
-                    temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
-                pipeline_dir[user] = temp_usr_data
+            temp_usr_data = dict()
+            for run in walk('%s/%s' % (path, user)).next()[1]:
+                temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
+            pipeline_dir[user] = temp_usr_data
         return pipeline_dir
 
         
