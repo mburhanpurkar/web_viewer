@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys 
+from os import walk
 from json import loads
 from math import ceil
 from flask import Flask
@@ -9,6 +9,7 @@ app = Flask(__name__)
 
 
 """
+(Will update this bit later...)
 This is a modified version of the web viewer that works for the new plotter.
 
 This does not  handle the bonsai dedisperser as it does not use the python
@@ -19,7 +20,7 @@ DEPENDENCIES
 Flask (pip install Flask)
 Flask-Classy (pip install flask-classy)
 
-SETUP
+SETUP (will update later...)
     mkdir static
     cd static
     ln -s /path/to/plots plots
@@ -29,20 +30,44 @@ be modified by altering the call to get_images()
 RUNNING
     ./extract_names.py
 
-The Index page is at: localhost:5000/.
+The Index page is at: localhost:5001/.
     (Note: the class is called View because classy makes the base url the prefix to "View" in the class name.)
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom (defult: 0)
 """
 
 
+class Crawler():
+    """
+    A class has been made here because I thought it might be fun to add metadata at some point! 
+    Can just be added to Parser if not needed.
+    """
+    def __init__(self, path='..'):
+        self.pipeline_dir = self._get_dirs(path)
+    
+    def _get_dirs(self, path):
+        """
+        Gets the user directories and the names of the pipeline directories in them. Not recursive! Just 
+        searches two layers of directories! 
+        The dictionary returned is in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
+        """
+        pipeline_dir = dict()
+        for user in walk(path).next()[1]:
+            if user != 'web_viewer':
+                temp_usr_data = dict()
+                for run in walk('%s/%s' % (path, user)).next()[1]:
+                    temp_usr_data[run] = Parser('../%s/%s' % (user, run))
+                pipeline_dir[user] = temp_usr_data
+        return pipeline_dir
+
+        
 class Parser():
     """
     This gets fnames (the list of file names at different zoom levels produced by the plotter transform)
     and helpful min/max index and room values by reading from the json file.
     It is also handy because it prevents the files from being re-parsed for each webpage View creates! 
     """
-    def __init__(self, path='static/plots'):
+    def __init__(self, path='..'):
         self.fnames = self._get_files(path)
         self.min_zoom, self.min_index = 0, 0
         self.max_zoom = len(self.fnames[0])
@@ -96,19 +121,41 @@ class Parser():
 
 
 class View(FlaskView):
-    def __init__(self):
-        self.fnames = files.fnames
-        self.min_zoom = files.min_zoom
-        self.min_index = files.min_index
-        self.max_zoom = files.max_zoom
-        self.max_index = files.max_index
+    def _get_run_info(self, user, run):
+        # Get parser object
+        self.fnames = dirs.pipeline_dir[user][run].fnames
+        self.min_zoom = dirs.pipeline_dir[user][run].min_zoom
+        self.min_index = dirs.pipeline_dir[user][run].min_index
+        self.max_zoom = dirs.pipeline_dir[user][run].max_zoom
+        self.max_index = dirs.pipeline_dir[user][run].max_index
+    
+    def index(self):
+        """Home page! Links to each of the users' pipeline runs."""
+        s = '<h3>Users</h3>'
+        for key in dirs.pipeline_dir:
+            s += '<li><a href="%s">%s</a>\n' % (url_for('View:runs', user=key), key)
+        return s
 
-    def show_tiles(self, zoom, index1, index2):
+
+    def runs(self, user):
+        """Displays links to the pipeline runs for a particular user."""
+        s = '<h3>Pipeline Runs</h3>'
+        for run_name in dirs.pipeline_dir[str(user)]:
+            s += '<h4>%s</h4>' % run_name
+            s += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=4)
+            s += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
+        return s
+
+
+    def show_tiles(self, user, run, zoom, index1, index2):
         """Tiled image viewer! Shows all of the plots produced from a pipeline
         run at different zooms across varying time intervals. The range of pictures
         shown can be changed to any values in the url (index1 is the index of the
         first image shown and index2 is the index of the last and defaults are set
         to 0 and 4 for the link accessed from the home page). """
+        
+        self._get_run_info(user, run)
+
         zoom = int(zoom)
         index1 = int(index1)
         index2 = int(index2)
@@ -134,23 +181,23 @@ class View(FlaskView):
 
         if self._check_set(zoom, index1 - 1):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
+                        user=user, run=run, zoom=zoom, index1=index1 - 1, index2=index2 - 1)), 'Prev Time')
         else:
             display += 'Prev Time&nbsp;&nbsp;&nbsp;'
         if self._check_set(zoom, index1 + 1):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
+                        user=user, run=run, zoom=zoom, index1=index1 + 1, index2=index2 + 1)), 'Next Time')
         else:
             display += 'Next Time&nbsp;&nbsp;&nbsp;'
 
         if self._check_set(zoom, index1 - (index2 - index1)):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Jump Back')
+                        user=user, run=run, zoom=zoom, index1=index1 - (index2 - index1), index2=index2 - (index2 - index1))), 'Jump Back')
         else:
             display += 'Jump Back&nbsp;&nbsp;&nbsp;'
         if self._check_set(zoom, index1 + (index2 - index1)):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Jump Forward')
+                        user=user, run=run, zoom=zoom, index1=index1 + (index2 - index1), index2=index2 + (index2 - index1))), 'Jump Forward')
         else:
             display += 'Jump Forward&nbsp;&nbsp;&nbsp;'
 
@@ -164,7 +211,7 @@ class View(FlaskView):
 
         if self._check_set(zoom + 1, index1 * 2):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        zoom=zoom + 1, index1=new_index1, index2=new_index2)), 'Zoom In')
+                        user=user, run=run, zoom=zoom + 1, index1=new_index1, index2=new_index2)), 'Zoom In')
         else:
             display += 'Zoom In&nbsp;&nbsp;&nbsp;'
 
@@ -178,7 +225,7 @@ class View(FlaskView):
 
         if self._check_set(zoom - 1, index1 // 2):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        zoom=zoom - 1, index1=new_index1, index2=new_index2)), 'Zoom Out')
+                        user=user, run=run, zoom=zoom - 1, index1=new_index1, index2=new_index2)), 'Zoom Out')
         else:
             display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
 
@@ -186,9 +233,12 @@ class View(FlaskView):
 
         return display
 
-    def show_triggers(self, zoom):
+
+    def show_triggers(self, user, run, zoom):
         """Displays all trigger plots at a given zoom horizontally.
         The zoom level can be changed by changing the value in the url."""
+        self._get_run_info(user, run)
+
         zoom = int(zoom)
 
         triggerList = self.fnames[-1]
@@ -201,7 +251,7 @@ class View(FlaskView):
         for i, trigger in enumerate(triggerList[zoom]):
             temp = url_for('static', filename='plots/%s' % trigger)
             if i > 1 and i < self.max_index[-1][zoom] - 2:
-                temp_link = url_for('View:show_tiles', zoom=zoom, index1=i - 2, index2=i + 2)
+                temp_link = url_for('View:show_tiles', user=user, run=run, zoom=zoom, index1=i - 2, index2=i + 2)
                 display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
             else:
                 display += '<td><img src="%s"></td>' % temp
@@ -213,11 +263,6 @@ class View(FlaskView):
 
         return display
 
-    def index(self):
-        """Home page!"""
-        s = '<li> <a href="%s">Show Tiles (default: zoom 0, index 0-4)</a>\n' % url_for('View:show_tiles', zoom=0, index1=0, index2=4)
-        s += '<li> <a href="%s">Show Triggers (default: zoom 0)</a>\n' % url_for('View:show_triggers', zoom=0)
-        return s
 
     def _check_set(self, zoom, index):
         """Checks whether a link should be added at the top of the page
@@ -243,6 +288,6 @@ class View(FlaskView):
 
 
 if __name__ == '__main__':
-    files = Parser()  # temporary poor form until I can figure out how to pass this to __init__ for View
+    dirs = Crawler()
     View.register(app)
     app.run(host='0.0.0.0', port=5001, debug=False)
