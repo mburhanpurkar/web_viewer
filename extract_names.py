@@ -42,7 +42,7 @@ class Crawler():
     A class has been made here because I thought it might be fun to add metadata at some point! 
     Can just be added to Parser if not needed.
     """
-    def __init__(self, path='..'):
+    def __init__(self, path='static/plots'):
         self.pipeline_dir = self._get_dirs(path)
     
     def _get_dirs(self, path):
@@ -56,7 +56,7 @@ class Crawler():
             if user != 'web_viewer':
                 temp_usr_data = dict()
                 for run in walk('%s/%s' % (path, user)).next()[1]:
-                    temp_usr_data[run] = Parser('../%s/%s' % (user, run))
+                    temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
                 pipeline_dir[user] = temp_usr_data
         return pipeline_dir
 
@@ -67,7 +67,7 @@ class Parser():
     and helpful min/max index and room values by reading from the json file.
     It is also handy because it prevents the files from being re-parsed for each webpage View creates! 
     """
-    def __init__(self, path='..'):
+    def __init__(self, path='static/plots'):
         self.fnames = self._get_files(path)
         self.min_zoom, self.min_index = 0, 0
         self.max_zoom = len(self.fnames[0])
