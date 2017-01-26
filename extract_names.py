@@ -2,8 +2,7 @@
 from os import walk
 from json import loads
 from math import ceil
-from flask import Flask
-from flask import url_for
+from flask import Flask, url_for
 from flask_classy import FlaskView
 app = Flask(__name__)
 
@@ -35,6 +34,11 @@ The Index page is at: localhost:5001/.
     (Note: the class is called View because classy makes the base url the prefix to "View" in the class name.)
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom (defult: 0)
+
+TODO
+- links back to other pages
+- check whether dictionary entries exist, if not, reparse (maybe do "don't see your run?" link)
+- some nicer parsing of names so people don't have to type long things
 """
 
 
@@ -134,17 +138,16 @@ class View(FlaskView):
     """
     def _get_run_info(self, user, run):
         # Get parser object for corresponding user/run
-        # TODO check that it exists, if not, reparse for new run. 
-        self.fnames = dirs.pipeline_dir[user][run].fnames
-        self.min_zoom = dirs.pipeline_dir[user][run].min_zoom
-        self.min_index = dirs.pipeline_dir[user][run].min_index
-        self.max_zoom = dirs.pipeline_dir[user][run].max_zoom
-        self.max_index = dirs.pipeline_dir[user][run].max_index
+        self.fnames = master_directories.pipeline_dir[user][run].fnames
+        self.min_zoom = master_directories.pipeline_dir[user][run].min_zoom
+        self.min_index = master_directories.pipeline_dir[user][run].min_index
+        self.max_zoom = master_directories.pipeline_dir[user][run].max_zoom
+        self.max_index = master_directories.pipeline_dir[user][run].max_index
     
     def index(self):
         """Home page! Links to each of the users' pipeline runs."""
         s = '<h3>Users</h3>'
-        for key in dirs.pipeline_dir:
+        for key in master_directories.pipeline_dir:
             s += '<li><a href="%s">%s</a>\n' % (url_for('View:runs', user=key), key)
         return s
 
@@ -152,10 +155,11 @@ class View(FlaskView):
     def runs(self, user):
         """Displays links to the pipeline runs for a particular user."""
         s = '<h3>Pipeline Runs</h3>'
-        for run_name in dirs.pipeline_dir[str(user)]:
+        for run_name in master_directories.pipeline_dir[str(user)]:
             s += '<h4>%s</h4>' % run_name
             s += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=4)
             s += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
+        s += '<p>[<a href="%s">Back to List of Users</a>]</p>' % url_for('View:index')
         return s
 
 
@@ -240,9 +244,7 @@ class View(FlaskView):
                         user=user, run=run, zoom=zoom - 1, index1=new_index1, index2=new_index2)), 'Zoom Out')
         else:
             display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
-
         display += ']</p> </center>'
-
         return display
 
 
@@ -251,7 +253,6 @@ class View(FlaskView):
         The zoom level can be changed by changing the value in the url."""
 
         self._get_run_info(user, run)
-
         zoom = int(zoom)
 
         triggerList = self.fnames[-1]
@@ -273,7 +274,6 @@ class View(FlaskView):
                 last_row = current_row
                 display += '</tr><tr><td>&nbsp;</td></tr><tr>'
         display += '</tr></table>'
-
         return display
 
     def _check_set(self, zoom, index):
@@ -299,6 +299,6 @@ class View(FlaskView):
 
 
 if __name__ == '__main__':
-    dirs = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
-    View.register(app)   # making it a global variable until I figure out how to pass it to View without flask yelling at me
+    master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
+    View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs
     app.run(host='0.0.0.0', port=5001, debug=False)
