@@ -39,7 +39,6 @@ The Index page is at: localhost:5001/ for development!
     Show triggers - displays all triggers at a specified zoom (defult: 0)
 
 TODO
-- links back to other pages
 - check whether dictionary entries exist, if not, reparse (maybe do "don't see your run?" link)
 - change defaults for show_tiles (4) and show_triggers (5) -- tell Kendrick he can change those from url
 - add show_last_transform, similar to show_triggers
@@ -156,6 +155,7 @@ class View(FlaskView):
         display = '<h3>Users</h3>'
         for key in master_directories.pipeline_dir:
             display += '<li><a href="%s">%s</a>\n' % (url_for('View:runs', user=key), key)
+        display += '<p><a href="%s">Don\'t see your directory? Click here to update.</a></p>' % url_for('View:update_directories')
         return display
 
 
@@ -166,9 +166,9 @@ class View(FlaskView):
             display += '<h4>%s</h4>' % run_name
             display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=4)
             display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
-        display += '<p>[<a href="%s">Back to List of Users</a>]</p>' % url_for('View:index')
+        display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
+                   % (url_for('View:index'), url_for('View:update_directories'))
         return display
-
 
     def show_tiles(self, user, run, zoom, index1, index2):
         """Tiled image viewer! Shows all of the plots produced from a pipeline
@@ -256,9 +256,7 @@ class View(FlaskView):
         else:
             display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
         display += ']</p> </center>'
-
         return display
-
 
     def show_triggers(self, user, run, zoom):
         """Displays all trigger plots at a given zoom horizontally.
@@ -290,6 +288,15 @@ class View(FlaskView):
         display += '</tr></table>'
         return display
 
+    def update_directories(self):
+        """Going here updates master_directories"""
+        # Update directories... can do this better by re-writing crawler to check for keys
+        # but it's not large enough to warrant doing that for now I think. 
+        master_directories = Crawler()
+        # Provide link to user page
+        display = '<center><p>Directories Updated!</p><p><a href="%s">Back to Users Page</a></p></center>' % url_for('View:index')
+        return display
+
     def _check_set(self, zoom, index):
         """Checks whether a link should be added at the top of the page
         to the next set of images in the series."""
@@ -314,5 +321,5 @@ class View(FlaskView):
 
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
-    View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
+    app.run(host='0.0.0.0', port=5001, debug=False)
