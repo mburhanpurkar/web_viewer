@@ -8,17 +8,14 @@ app = Flask(__name__)
 
 
 """
-This is a modified version of the web viewer that works for the new plotter 
-and the /data2/web_viewer directory. Running will display a list of users, 
-each with a list of pipeline runs in their directories.
+This is a modified version of the web viewer that works for the new plotter and the /data2/web_viewer 
+directory. Running will display a list of users, each with a list of pipeline runs in their directories.
 
-Both show_tiles (show all plots) and show_triggers (show the last set of 
-plots made) can be viewed, but this does not handle the bonsai dedisperser
-outouts as it does not use the python plotter transform (the triggers page 
-will just show the last transform in the fnames list).
+Both show_tiles (show all plots) and show_triggers (show the last set of plots made) can be viewed, but
+this does not handle the bonsai dedisperser plots as it does not use the python plotter transform 
+(the triggers page will just show the last transform in the fnames list).
 
-A persistent web viewer is running from the web_viewer account, and is up 
-at frb1.physics.mcgill.ca:5000/! 
+A persistent web viewer is running from the web_viewer account, and is up at frb1.physics.mcgill.ca:5000/! 
 
 DEPENDENCIES
 Flask (pip install Flask)
@@ -39,8 +36,6 @@ The Index page is at: localhost:5001/ for development!
     Show triggers - displays all triggers at a specified zoom (defult: 0)
 
 TODO
-- change defaults for show_tiles (4) and show_triggers (5) -- tell Kendrick he can change those from url
-- add show_last_transform, similar to show_triggers
 - outer list grouping by prefix, inner list grouping by time (for running different transform chains
   on the same dataset)
 - display time ranges next to index/zoom at the top of the page
@@ -158,14 +153,23 @@ class View(FlaskView):
         display += '<p><a href="%s">Don\'t see your directory? Click here to update.</a></p>' % url_for('View:update_directories')
         return display
 
-
     def runs(self, user):
         """Displays links to the pipeline runs for a particular user."""
         display = '<h3>Pipeline Runs</h3>'
+        # Get rid of the last 8 elements (time bleh)
+        sorted_ish_run_list = []
+        for run in master_directories.pipeline_dir[str(user)]:
+            print run[:-8]
+            if run[:-8] in sorted_ish_run_list:
+                pass
+            else:
+                pass
+        
         for run_name in master_directories.pipeline_dir[str(user)]:
             display += '<h4>%s</h4>' % run_name
             display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=3)
             display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
+            display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('View:show_last_transform', user=user, run=run_name, zoom=0)
         display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
                    % (url_for('View:index'), url_for('View:update_directories'))
         return display
@@ -201,7 +205,9 @@ class View(FlaskView):
 
         # Links to user and user/run pages
         display += '<p><center>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to Users List</a>&nbsp;&nbsp;&nbsp;<a href="%s">Back to Your Runs</a>&nbsp;&nbsp;&nbsp;<a href="%s">' \
-                   'Show Triggers</a>&nbsp;&nbsp;&nbsp;]</center></p>' % (url_for('View:index'), url_for('View:runs', user=user), url_for('View:show_triggers', user=user, run=run, zoom=0))
+                   'Show Triggers</a>&nbsp;&nbsp;&nbsp;<a href="%s">Show Last Transform</a>&nbsp;&nbsp;&nbsp;]</center></p>' \
+                   % (url_for('View:index'), url_for('View:runs', user=user), url_for('View:show_triggers', user=user, run=run, zoom=0), 
+                      url_for('View:show_last_transform', user=user, run=run, zoom=zoom))
 
         # Plots to be linked
         display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
@@ -258,9 +264,41 @@ class View(FlaskView):
         display += ']</p> </center>'
         return display
 
+    def show_last_transform(self, user, run, zoom):
+        """Displays the plots for the last transform at a given zoom horizontally.
+        The zoom level can be changed by changing the value in the url.
+        Currently just indexes the second last value in fnames."""
+
+        self._get_run_info(user, run)
+        zoom = int(zoom)
+
+        triggerList = self.fnames[-2]
+        display = '<h3>Displaying Last Transform Plots at Zoom %s</h3>' % (self.max_zoom - zoom - 1)
+        display += '<p><center>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to Users List</a>&nbsp;&nbsp;&nbsp;<a href="%s">Back to Your Runs</a>' \
+                   '&nbsp;&nbsp;&nbsp;]</center></p>' % (url_for('View:index'), url_for('View:runs', user=user))
+        display += '<table cellspacing="0" cellpadding="0"><tr>'
+
+        last_row = 0
+        current_row = 0
+
+        for i, trigger in enumerate(triggerList[zoom]):
+            temp = url_for('static', filename='plots/%s/%s/%s' % (user, run, trigger))
+            if i > 1 and i < self.max_index[-1][zoom] - 2:
+                temp_link = url_for('View:show_tiles', user=user, run=run, zoom=zoom, index1=i - 2, index2=i + 2)
+                display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
+            else:
+                display += '<td><img src="%s"></td>' % temp
+            current_row += 1
+            if (current_row - last_row) == 5:
+                last_row = current_row
+                display += '</tr><tr><td>&nbsp;</td></tr><tr>'
+        display += '</tr></table>'
+        return display
+
     def show_triggers(self, user, run, zoom):
         """Displays all trigger plots at a given zoom horizontally.
-        The zoom level can be changed by changing the value in the url."""
+        The zoom level can be changed by changing the value in the url.
+        Currently just indexes the last value in fnames."""
 
         self._get_run_info(user, run)
         zoom = int(zoom)
@@ -323,4 +361,4 @@ class View(FlaskView):
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
     View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5001, debug=False)
