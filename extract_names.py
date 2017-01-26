@@ -292,6 +292,7 @@ class View(FlaskView):
         """Going here updates master_directories"""
         # Update directories... can do this better by re-writing crawler to check for keys
         # but it's not large enough to warrant doing that for now I think. 
+        global master_directories
         master_directories = Crawler()
         # Provide link to user page
         display = '<center><p>Directories Updated!</p><p><a href="%s">Back to Users Page</a></p></center>' % url_for('View:index')
