@@ -39,7 +39,6 @@ The Index page is at: localhost:5001/ for development!
     Show triggers - displays all triggers at a specified zoom (defult: 0)
 
 TODO
-- check whether dictionary entries exist, if not, reparse (maybe do "don't see your run?" link)
 - change defaults for show_tiles (4) and show_triggers (5) -- tell Kendrick he can change those from url
 - add show_last_transform, similar to show_triggers
 - outer list grouping by prefix, inner list grouping by time (for running different transform chains
@@ -123,7 +122,8 @@ class Crawler():
         for user in walk(path).next()[1]:
             temp_usr_data = dict()
             for run in walk('%s/%s' % (path, user)).next()[1]:
-                temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
+                if run[0] != '_':   # don't include in-progress pipeline runs
+                    temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
             pipeline_dir[user] = temp_usr_data
         return pipeline_dir
 
