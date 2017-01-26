@@ -17,6 +17,9 @@ plots made) can be viewed, but this does not handle the bonsai dedisperser
 outouts as it does not use the python plotter transform (the triggers page 
 will just show the last transform in the fnames list).
 
+A persistent web viewer is running from the web_viewer account, and is up 
+at frb1.physics.mcgill.ca:5000/! 
+
 DEPENDENCIES
 Flask (pip install Flask)
 Flask-Classy (pip install flask-classy)
@@ -30,7 +33,7 @@ In your web_viewer directory,
 RUNNING
     ./extract_names.py
 
-The Index page is at: localhost:5001/.
+The Index page is at: localhost:5001/ for development! 
     (Note: the class is called View because classy makes the base url the prefix to "View" in the class name.)
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom (defult: 0)
@@ -38,7 +41,11 @@ The Index page is at: localhost:5001/.
 TODO
 - links back to other pages
 - check whether dictionary entries exist, if not, reparse (maybe do "don't see your run?" link)
-- some nicer parsing of names so people don't have to type long things
+- change defaults for show_tiles (4) and show_triggers (5) -- tell Kendrick he can change those from url
+- add show_last_transform, similar to show_triggers
+- outer list grouping by prefix, inner list grouping by time (for running different transform chains
+  on the same dataset)
+- display time ranges next to index/zoom at the top of the page
 """
 
 
@@ -146,21 +153,21 @@ class View(FlaskView):
     
     def index(self):
         """Home page! Links to each of the users' pipeline runs."""
-        s = '<h3>Users</h3>'
+        display = '<h3>Users</h3>'
         for key in master_directories.pipeline_dir:
-            s += '<li><a href="%s">%s</a>\n' % (url_for('View:runs', user=key), key)
-        return s
+            display += '<li><a href="%s">%s</a>\n' % (url_for('View:runs', user=key), key)
+        return display
 
 
     def runs(self, user):
         """Displays links to the pipeline runs for a particular user."""
-        s = '<h3>Pipeline Runs</h3>'
+        display = '<h3>Pipeline Runs</h3>'
         for run_name in master_directories.pipeline_dir[str(user)]:
-            s += '<h4>%s</h4>' % run_name
-            s += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=4)
-            s += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
-        s += '<p>[<a href="%s">Back to List of Users</a>]</p>' % url_for('View:index')
-        return s
+            display += '<h4>%s</h4>' % run_name
+            display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=4)
+            display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
+        display += '<p>[<a href="%s">Back to List of Users</a>]</p>' % url_for('View:index')
+        return display
 
 
     def show_tiles(self, user, run, zoom, index1, index2):
@@ -191,6 +198,10 @@ class View(FlaskView):
                 if self._check_image(transform, zoom, index):
                     display += '<td><img src="%s"></td>' % url_for('static', filename='plots/%s/%s/%s' % (user, run, self.fnames[transform][zoom][index]))
             display += '</tr><tr><td>&nbsp;</td></tr>'
+
+        # Links to user and user/run pages
+        display += '<p><center>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to Users List</a>&nbsp;&nbsp;&nbsp;<a href="%s">Back to Your Runs</a>&nbsp;&nbsp;&nbsp;<a href="%s">' \
+                   'Show Triggers</a>&nbsp;&nbsp;&nbsp;]</center></p>' % (url_for('View:index'), url_for('View:runs', user=user), url_for('View:show_triggers', user=user, run=run, zoom=0))
 
         # Plots to be linked
         display += '<p> <center> [&nbsp;&nbsp;&nbsp;'
@@ -245,6 +256,7 @@ class View(FlaskView):
         else:
             display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
         display += ']</p> </center>'
+
         return display
 
 
@@ -257,6 +269,8 @@ class View(FlaskView):
 
         triggerList = self.fnames[-1]
         display = '<h3>Displaying Trigger Plots at Zoom %s</h3>' % (self.max_zoom - zoom - 1)
+        display += '<p><center>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to Users List</a>&nbsp;&nbsp;&nbsp;<a href="%s">Back to Your Runs</a>' \
+                   '&nbsp;&nbsp;&nbsp;]</center></p>' % (url_for('View:index'), url_for('View:runs', user=user))
         display += '<table cellspacing="0" cellpadding="0"><tr>'
 
         last_row = 0
