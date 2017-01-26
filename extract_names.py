@@ -164,7 +164,7 @@ class View(FlaskView):
         display = '<h3>Pipeline Runs</h3>'
         for run_name in master_directories.pipeline_dir[str(user)]:
             display += '<h4>%s</h4>' % run_name
-            display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=4)
+            display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=3)
             display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
         display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
                    % (url_for('View:index'), url_for('View:update_directories'))
@@ -282,7 +282,7 @@ class View(FlaskView):
             else:
                 display += '<td><img src="%s"></td>' % temp
             current_row += 1
-            if (current_row - last_row) == 4:
+            if (current_row - last_row) == 5:
                 last_row = current_row
                 display += '</tr><tr><td>&nbsp;</td></tr><tr>'
         display += '</tr></table>'
