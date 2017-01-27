@@ -155,21 +155,26 @@ class View(FlaskView):
 
     def runs(self, user):
         """Displays links to the pipeline runs for a particular user."""
-        display = '<h3>Pipeline Runs</h3>'
-        # Get rid of the last 8 elements (time bleh)
-        sorted_ish_run_list = []
+        display = '<h3>%s\'s pipeline runs</h3>' % user
+
+        # Sort runs by prefix {prefix1: [run1, run2, run3, ...], prefix2: [...], ...}
+        sorted_runs = dict()
         for run in master_directories.pipeline_dir[str(user)]:
-            print run[:-8]
-            if run[:-8] in sorted_ish_run_list:
-                pass
+            prefix = run[:-9]
+            if prefix not in sorted_runs:
+                # We need to add a new key
+                sorted_runs[prefix] = [run]
             else:
-                pass
-        
-        for run_name in master_directories.pipeline_dir[str(user)]:
-            display += '<h4>%s</h4>' % run_name
-            display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run_name, zoom=0, index1=0, index2=3)
-            display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run_name, zoom=0)
-            display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('View:show_last_transform', user=user, run=run_name, zoom=0)
+                # Add to existing list
+                sorted_runs[prefix].append(run)
+
+        for prefix in sorted_runs:
+            display += '<h4>%s</h4>' % prefix
+            for run in sorted_runs[prefix]:
+                display += '<h5>%s</h5>' % run[-8:]
+                display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
+                display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run, zoom=0)
+                display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('View:show_last_transform', user=user, run=run, zoom=0)
         display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
                    % (url_for('View:index'), url_for('View:update_directories'))
         return display
