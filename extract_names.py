@@ -156,14 +156,18 @@ class View(FlaskView):
     def runs(self, user):
         """Displays links to the pipeline runs for a particular user."""
         display = '<h3>Pipeline Runs</h3>'
-        # Get rid of the last 8 elements (time bleh)
-        sorted_ish_run_list = []
-        for run in master_directories.pipeline_dir[str(user)]:
-            print run[:-8]
-            if run[:-8] in sorted_ish_run_list:
-                pass
-            else:
-                pass
+        # # Get rid of the last 8 elements (time bleh)
+        # sorted_ish_run_list = []
+        # for run in master_directories.pipeline_dir[str(user)]:
+        #     print run[:-8]
+        #     if run[:-8] not in sorted_ish_run_list[:][0][:-8]:
+        #         new_group = run
+        #         sorted_ish_run_list.append(new_group)
+        #     else:
+        #         # Running different transforms on multiple datasets! 
+        #         # Add to current group
+        #         sorted_ish_run_list[sorted_ish_run_list[:][0].index(run[:-8])].append(run)
+        # print sorted_ish_run_list
         
         for run_name in master_directories.pipeline_dir[str(user)]:
             display += '<h4>%s</h4>' % run_name
@@ -244,7 +248,7 @@ class View(FlaskView):
 
         if self._check_set(zoom + 1, index1 * 2):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        user=user, run=run, zoom=zoom + 1, index1=new_index1, index2=new_index2)), 'Zoom In')
+                        user=user, run=run, zoom=zoom + 1, index1=int(new_index1), index2=int(new_index2))), 'Zoom In')
         else:
             display += 'Zoom In&nbsp;&nbsp;&nbsp;'
 
@@ -258,7 +262,7 @@ class View(FlaskView):
 
         if self._check_set(zoom - 1, index1 // 2):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        user=user, run=run, zoom=zoom - 1, index1=new_index1, index2=new_index2)), 'Zoom Out')
+                        user=user, run=run, zoom=zoom - 1, index1=int(new_index1), index2=int(new_index2))), 'Zoom Out')
         else:
             display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
         display += ']</p> </center>'
