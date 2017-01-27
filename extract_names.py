@@ -92,10 +92,11 @@ class Parser():
         return fnames
 
     def __str__(self):
+        s = ''
         for tf_group in self.fnames:
             for zoom_group in tf_group:
                 for file in zoom_group:
-                    s += file,
+                    s += str(file) + ' '
                 s += '\n'
             s += '\n\n'
         return s
