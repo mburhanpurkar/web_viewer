@@ -244,7 +244,7 @@ class View(FlaskView):
 
         if self._check_set(zoom + 1, index1 * 2):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        user=user, run=run, zoom=zoom + 1, index1=new_index1, index2=new_index2)), 'Zoom In')
+                        user=user, run=run, zoom=zoom + 1, index1=int(new_index1), index2=int(new_index2))), 'Zoom In')
         else:
             display += 'Zoom In&nbsp;&nbsp;&nbsp;'
 
@@ -258,7 +258,7 @@ class View(FlaskView):
 
         if self._check_set(zoom - 1, index1 // 2):
             display += '<a href="%s">%s</a>&nbsp;&nbsp;&nbsp;' % ((url_for('View:show_tiles',
-                        user=user, run=run, zoom=zoom - 1, index1=new_index1, index2=new_index2)), 'Zoom Out')
+                        user=user, run=run, zoom=zoom - 1, index1=int(new_index1), index2=int(new_index2))), 'Zoom Out')
         else:
             display += 'Zoom Out&nbsp;&nbsp;&nbsp;'
         display += ']</p> </center>'
