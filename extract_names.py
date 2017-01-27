@@ -366,4 +366,4 @@ class View(FlaskView):
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
     View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=False)
