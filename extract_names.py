@@ -34,11 +34,6 @@ The Index page is at: localhost:5001/ for development!
     (Note: the class is called View because classy makes the base url the prefix to "View" in the class name.)
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom (defult: 0)
-
-TODO
-- outer list grouping by prefix, inner list grouping by time (for running different transform chains
-  on the same dataset)
-- display time ranges next to index/zoom at the top of the page
 """
 
 
@@ -49,7 +44,7 @@ class Parser():
     It is also handy because it prevents the files from being re-parsed for each webpage View creates! 
     """
     def __init__(self, path):
-        self.fnames = self._get_files(path)
+        self.fnames, self.ftimes = self._get_files(path)
         self.min_zoom, self.min_index = 0, 0
         self.max_zoom = len(self.fnames[0])
         self.max_index = [[len(zoom) for zoom in transform] for transform in self.fnames]
@@ -65,37 +60,52 @@ class Parser():
         [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
          [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
          [...]]
+        UPDATE: each element in the list is actually now a tuple of 
+        (filename, time)! 
         Currently does not handle the bonsai dedisperser.
         """
         json_file = open(path + '/rf_pipeline_0.json').read()
         json_data = loads(json_file)
         transforms_list = json_data['transforms']
         fnames = []
+        ftimes = []
 
+        s_per_sample = (json_data['t1'] - json_data['t0']) / json_data['nsamples']  # number of seconds per sample
+        
         for transform in transforms_list:
             # This will iterate over all the transforms
             if transform['name'] == 'plotter_transform':
                 # Start a new list for a new transform
-                transform_group = []
+                ftransform_group = []
+                ttransform_group = []
                 for zoom_level in transform['plots']:
                     # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
-                    zoom_group = []
+                    fzoom_group = []
+                    tzoom_group = []
+                    group_it0 = zoom_level['it0']
                     for file_info in zoom_level['files'][0]:
                         # We can finally access the file names :)
                         name = file_info['filename']
-                        zoom_group.append(name)
-                    transform_group.append(zoom_group)
+                        time = (group_it0 + file_info['it0']) * s_per_sample + json_data['t0']   # start time of the plot in seconds
+                        fzoom_group.append(name)
+                        tzoom_group.append(time)
+                    ftransform_group.append(fzoom_group)
+                    ttransform_group.append(tzoom_group)
                 # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
                 # most-zoomed-out.  The web viewer uses the opposite convention, so we reverse the order here.
-                transform_group.reverse()
-                fnames.append(transform_group)
-        return fnames
+                ftransform_group.reverse()
+                ttransform_group.reverse()
+                fnames.append(ftransform_group)
+                ftimes.append(ttransform_group)
+
+        return fnames, ftimes
 
     def __str__(self):
+        s = ''
         for tf_group in self.fnames:
             for zoom_group in tf_group:
                 for file in zoom_group:
-                    s += file,
+                    s += str(file[0]) + ' '
                 s += '\n'
             s += '\n\n'
         return s
@@ -140,6 +150,7 @@ class View(FlaskView):
     def _get_run_info(self, user, run):
         # Get parser object for corresponding user/run
         self.fnames = master_directories.pipeline_dir[user][run].fnames
+        self.ftimes = master_directories.pipeline_dir[user][run].ftimes
         self.min_zoom = master_directories.pipeline_dir[user][run].min_zoom
         self.min_index = master_directories.pipeline_dir[user][run].min_index
         self.max_zoom = master_directories.pipeline_dir[user][run].max_zoom
@@ -197,10 +208,10 @@ class View(FlaskView):
 
         for transform in reversed(range(len(self.fnames))):    # reversed to show triggers first
             display += '<tr>'
-            # First, add plot names
+            # First, add plot times (!!!)
             for index in range(index1, index2 + 1):
                 if self._check_image(transform, zoom, index):
-                    display += '<td>%s</td>' % self.fnames[transform][zoom][index]
+                    display += '<td>%s</td>' % self.ftimes[transform][zoom][index]
             display += '</tr>'
             # Now, add the images
             for index in range(index1, index2 + 1):
