@@ -55,13 +55,12 @@ class Parser():
         # print "Len fnames[0][0] (num tiles): ", len(self.fnames[0][0])
         
     def _get_files(self, path):
-        """Outputs a list of plot filenames based on the .json file produced
-        from pipeline runs. The output is in the following form:
+        """Outputs a list of plot filenames and plot start times as a tuple
+        based on the .json file produced from pipeline runs. The output is
+        in the following form:
         [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
          [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
          [...]]
-        UPDATE: each element in the list is actually now a tuple of 
-        (filename, time)! 
         Currently does not handle the bonsai dedisperser.
         """
         json_file = open(path + '/rf_pipeline_0.json').read()
