@@ -55,9 +55,8 @@ class Parser():
         # print "Len fnames[0][0] (num tiles): ", len(self.fnames[0][0])
         
     def _get_files(self, path):
-        """Outputs a list of plot filenames and plot start times as a tuple
-        based on the .json file produced from pipeline runs. The output is
-        in the following form:
+        """Outputs a list of plot filenames and plot start times as a tuple based on the .json file produced from 
+        pipeline runs. The output is in the following form:
         [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
          [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
          [...]]
@@ -91,7 +90,7 @@ class Parser():
                     ftransform_group.append(fzoom_group)
                     ttransform_group.append(tzoom_group)
                 # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
-                # most-zoomed-out.  The web viewer uses the opposite convention, so we reverse the order here.
+                # most-zoomed-out. The web viewer uses the opposite convention, so we reverse the order here.
                 ftransform_group.reverse()
                 ttransform_group.reverse()
                 fnames.append(ftransform_group)
@@ -190,11 +189,11 @@ class View(FlaskView):
         return display
 
     def show_tiles(self, user, run, zoom, index1, index2):
-        """Tiled image viewer! Shows all of the plots produced from a pipeline
-        run at different zooms across varying time intervals. The range of pictures
-        shown can be changed to any values in the url (index1 is the index of the
-        first image shown and index2 is the index of the last and defaults are set
-        to 0 and 4 for the link accessed from the home page). """
+        """Tiled image viewer! Shows all of the plots produced from a pipeline run at different zooms 
+        across varying time intervals. The range of pictures shown can be changed to any values in 
+        the url (index1 is the index of the first image shown and index2 is the index of the last 
+        and defaults are set to 0 and 4 for the link accessed from the home page). The numbers displayed
+        are the time in seconds at the start of the plot."""
         
         self._get_run_info(user, run)
 
@@ -280,9 +279,9 @@ class View(FlaskView):
         return display
 
     def show_last_transform(self, user, run, zoom):
-        """Displays the plots for the last transform at a given zoom horizontally.
-        The zoom level can be changed by changing the value in the url.
-        Currently just indexes the second last value in fnames."""
+        """Displays the plots for the last transform at a given zoom horizontally. The zoom level 
+        can be changed by changing the value in the url. Currently just indexes the second last
+        value in fnames."""
 
         self._get_run_info(user, run)
         zoom = int(zoom)
@@ -311,9 +310,9 @@ class View(FlaskView):
         return display
 
     def show_triggers(self, user, run, zoom):
-        """Displays all trigger plots at a given zoom horizontally.
-        The zoom level can be changed by changing the value in the url.
-        Currently just indexes the last value in fnames."""
+        """Displays all trigger plots at a given zoom horizontally. The zoom level can be 
+        changed by changing the value in the url. Currently just indexes the last value in 
+        fnames."""
 
         self._get_run_info(user, run)
         zoom = int(zoom)
@@ -352,8 +351,8 @@ class View(FlaskView):
         return display
 
     def _check_set(self, zoom, index):
-        """Checks whether a link should be added at the top of the page
-        to the next set of images in the series."""
+        """Checks whether a link should be added at the top of the page to the next set of
+        images in the series."""
         # For whatever reason, there are differing number of plots for
         # different transforms of the same zoom. This only returns false
         # if there are absolutely no images left (i.e. it will return true
