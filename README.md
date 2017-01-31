@@ -8,7 +8,7 @@ useful as possible for digesting pipeline outputs and sharing results!
 
 
 ### Basic Usage
-A persistent web viewer is currently up at [frb1.mcgill.ca:5000]
+A persistent web viewer is currently up at [frb1.physics.mcgill.ca:5000]
 (http://frb1.physics.mcgill.ca:5000) displaying a list of users who have used the
 web viewer. Their pipeline runs can be viewed by clicking on their names.
 
