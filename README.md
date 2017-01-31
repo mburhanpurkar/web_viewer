@@ -1,7 +1,10 @@
 # Web Viewer for the L1 Pipeline
-NB the web viewer currently does not handle the plots produced by the 
+*N.B. the web viewer currently does not handle the plots produced by the 
 bonsai dedisperser, meaning show_last_transform and show_triggers show the 
-second last transform and last transform respectively. This will be updated soon!
+second last transform and last transform respectively. This will be updated soon!*
+
+This isn't the prettiest image viewer around, but my goal is to make it as 
+useful as possible!
 
 
 ### Basic Usage
@@ -44,7 +47,7 @@ caching from displaying the incorrect plots!)
 Show Tiles displays the output of every plotter transform run in the chain. The 
 outputs of each plotter transform are displayed in separate rows, with the last 
 plotter transform displayed first. It is available at 
-frb1.physics.mcgill.ca:5000/show_tiles/USER/PIPELINERUN/ZOOM/INDEX0/INDEX1.
+frb1.../show_tiles/USER/PIPELINERUN/ZOOM/INDEX0/INDEX1.
 If you follow the links from the users page, it will default to displaying plots 
 0-3 at the most zoomed out level. 
 
@@ -67,3 +70,18 @@ the url.
 
 
 ### Show Triggers and Show Last Transform
+Show Triggers is available at frb1.../show_triggers/USER/PIPELINERUN/ZOOM. 
+It displays all of the trigger plots produced at the zoom level defined in the url 
+sequentially, providing a quick, high-level overview for a pipeline run. If you 
+follow the links from the users page, it will default to zoom 0. Each plot in Show
+Triggers is a link to a Show Tiles page that, if clicked, will allow you to see that 
+section of the pipeline run in more detail. 
+
+Show Last Transform has precisely the same functionality as Show Triggers, but it dislays the 
+outputs of the final (non-bonsai) plotter transform that was run.
+
+
+### Challenges
+- For simplicity, the web viewer is currently implemented in Flask, which doesn't appear
+  to be the hardiest of web servers. Occasional slow downs sometimes require that you 
+  click a link a couple times before the page loads.
