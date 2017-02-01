@@ -169,7 +169,7 @@ class View(FlaskView):
         # Sort runs by prefix {prefix1: [run1, run2, run3, ...], prefix2: [...], ...}
         sorted_runs = dict()
         for run in master_directories.pipeline_dir[str(user)]:
-            prefix = run[:-9]
+            prefix = run[:-18]
             if prefix not in sorted_runs:
                 # We need to add a new key
                 sorted_runs[prefix] = [run]
@@ -180,7 +180,7 @@ class View(FlaskView):
         for prefix in sorted_runs:
             display += '<h4>%s</h4>' % prefix
             for run in sorted_runs[prefix]:
-                display += '<h5>%s</h5>' % run[-8:]
+                display += '<h5>%s</h5>' % run[-17:]
                 display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
                 display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run, zoom=0)
                 display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('View:show_last_transform', user=user, run=run, zoom=0)
@@ -375,4 +375,4 @@ class View(FlaskView):
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
     View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5001, debug=False)
