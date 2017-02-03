@@ -156,14 +156,17 @@ class View(FlaskView):
     
     def index(self):
         """Home page! Links to each of the users' pipeline runs."""
+
         display = '<h3>Users</h3>'
         for key in master_directories.pipeline_dir:
             display += '<li><a href="%s">%s</a>\n' % (url_for('View:runs', user=key), key)
         display += '<p><a href="%s">Don\'t see your directory? Click here to update.</a></p>' % url_for('View:update_directories')
+        display += '<p><a href="https://github.com/mburhanpurkar/web_viewer">Instructions / Help / Documentation</a></p>'
         return display
 
     def runs(self, user):
         """Displays links to the pipeline runs for a particular user."""
+
         display = '<h3>%s\'s pipeline runs</h3>' % user
 
         # Sort runs by prefix {prefix1: [run1, run2, run3, ...], prefix2: [...], ...}

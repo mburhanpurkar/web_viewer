@@ -64,8 +64,8 @@ zooms along the time axis.
 The starting timestamps in seconds for each plot is displayed atop each one. This 
 can be useful if you would like to re-run the pipline on a small subsection of data
 if, for example, you would like to see the effects of running a different transform chain on
-particularly troublesome RFI. The `chime_stream_from_times` stream (currently awaiting 
-merging to master) will make this process easier.
+particularly troublesome RFI. The `chime_stream_from_times` stream (rf_pipelines/streams/
+chime_streams.py) will make this process easier.
 
 Note that the values of the zoom and indices visible can be changed manually. If, for 
 example, you would like to view more than 4 plots at once, you may adjust the values in
