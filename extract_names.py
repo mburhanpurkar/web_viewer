@@ -49,7 +49,11 @@ class Parser():
             self.min_zoom, self.min_index = 0, 0
             self.max_zoom = len(self.fnames[0])
             self.max_index = [[len(zoom) for zoom in transform] for transform in self.fnames]
-
+        else:
+            self.min_zoom, self.min_index = None, None
+            self.max_zoom = None
+            self.max_index = None
+        
         # Helpful for debug:
         # print "Len fnames (num transforms):  ", len(self.fnames)
         # print "Len fnames[0] (num zooms):    ", len(self.fnames[0])
@@ -204,7 +208,7 @@ class View(FlaskView):
         
         self._get_run_info(user, run)
 
-        if self.fnames is not None:
+        if self.fnames is None:
             return 'No files found.'
 
         zoom = int(zoom)
@@ -294,7 +298,7 @@ class View(FlaskView):
         value in fnames."""
 
         self._get_run_info(user, run)
-        if self.fnames is not None:
+        if self.fnames is None:
             return 'No files found'
 
         zoom = int(zoom)
@@ -329,7 +333,7 @@ class View(FlaskView):
 
         self._get_run_info(user, run)
         
-        if self.fnames is not None:
+        if self.fnames is None:
             return 'No files found'
 
         zoom = int(zoom)
