@@ -49,7 +49,7 @@ class Parser():
             self.min_zoom, self.min_index = 0, 0
             self.max_zoom = len(self.fnames[0])
             self.max_index = [[len(zoom) for zoom in transform] for transform in self.fnames]
-        else:
+        else:   # In case a directory does not contain plots (e.g. a directory with only trigger plots)
             self.min_zoom, self.min_index = None, None
             self.max_zoom = None
             self.max_index = None
@@ -298,8 +298,9 @@ class View(FlaskView):
         value in fnames."""
 
         self._get_run_info(user, run)
+
         if self.fnames is None:
-            return 'No files found'
+            return 'No files found.'
 
         zoom = int(zoom)
 
@@ -334,7 +335,7 @@ class View(FlaskView):
         self._get_run_info(user, run)
         
         if self.fnames is None:
-            return 'No files found'
+            return 'No files found.'
 
         zoom = int(zoom)
 
