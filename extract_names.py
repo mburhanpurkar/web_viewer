@@ -45,9 +45,10 @@ class Parser():
     """
     def __init__(self, path):
         self.fnames, self.ftimes = self._get_files(path)
-        self.min_zoom, self.min_index = 0, 0
-        self.max_zoom = len(self.fnames[0])
-        self.max_index = [[len(zoom) for zoom in transform] for transform in self.fnames]
+        if self.fnames is not None:
+            self.min_zoom, self.min_index = 0, 0
+            self.max_zoom = len(self.fnames[0])
+            self.max_index = [[len(zoom) for zoom in transform] for transform in self.fnames]
 
         # Helpful for debug:
         # print "Len fnames (num transforms):  ", len(self.fnames)
@@ -96,7 +97,10 @@ class Parser():
                 fnames.append(ftransform_group)
                 ftimes.append(ttransform_group)
 
-        return fnames, ftimes
+        if len(fnames) != 0:
+            return fnames, ftimes
+        else:
+            return None, None
 
     def __str__(self):
         s = ''
@@ -200,6 +204,9 @@ class View(FlaskView):
         
         self._get_run_info(user, run)
 
+        if self.fnames is not None:
+            return 'No files found.'
+
         zoom = int(zoom)
         index1 = int(index1)
         index2 = int(index2)
@@ -287,6 +294,9 @@ class View(FlaskView):
         value in fnames."""
 
         self._get_run_info(user, run)
+        if self.fnames is not None:
+            return 'No files found'
+
         zoom = int(zoom)
 
         triggerList = self.fnames[-2]
@@ -318,6 +328,10 @@ class View(FlaskView):
         fnames."""
 
         self._get_run_info(user, run)
+        
+        if self.fnames is not None:
+            return 'No files found'
+
         zoom = int(zoom)
 
         triggerList = self.fnames[-1]
