@@ -8,6 +8,10 @@ app = Flask(__name__)
 
 
 """
+*** TEST BRANCH FOR UPDATED BONSAI PLOTTER *** 
+    Comments haven't been updated. 
+NB For now, we are assuming the bonsai transform is the final plotting transform run!!
+
 This is a modified version of the web viewer that works for the new plotter and the /data2/web_viewer 
 directory. Running will display a list of users, each with a list of pipeline runs in their directories.
 
@@ -77,7 +81,7 @@ class Parser():
         
         for transform in transforms_list:
             # This will iterate over all the transforms
-            if transform['name'] == 'plotter_transform':
+            if ('plotter_transform' in transform['name'] and 'plots' in transform) or ('bonsai_dedisperser' in transform['name'] and 'plots' in transform):
                 # Start a new list for a new transform
                 ftransform_group = []
                 ttransform_group = []
