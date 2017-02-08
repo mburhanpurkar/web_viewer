@@ -8,9 +8,7 @@ app = Flask(__name__)
 
 
 """
-*** TEST BRANCH FOR UPDATED BONSAI PLOTTER *** 
-    Comments haven't been updated. 
-NB For now, we are assuming the bonsai transform is the final plotting transform run!!
+NB For now, we are assuming the bonsai transform is the final plotting transform run!
 
 This is a modified version of the web viewer that works for the new plotter and the /data2/web_viewer 
 directory. Running will display a list of users, each with a list of pipeline runs in their directories.
@@ -69,7 +67,7 @@ class Parser():
         [[[z0tf0f0, z0tf0f1, ...], [z1tf0f0, z1tf0f1, ...], ..., [...]],
          [[z0tf1f0, z0tf1f0, ...], [z1tf1f0, z1tf1f1, ...], ..., [...]],
          [...]]
-        Currently does not handle the bonsai dedisperser.
+        This handles the bonsai_dedisperser that I've just written, but it has yet to be thoroughly tested! 
         """
         json_file = open(path + '/rf_pipeline_0.json').read()
         json_data = loads(json_file)
