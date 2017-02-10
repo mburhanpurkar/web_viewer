@@ -1,7 +1,8 @@
 # Web Viewer for the L1 Pipeline
-*N.B. the web viewer currently does not handle the plots produced by the 
-bonsai dedisperser, meaning Show Last Transform and Show Triggers show the 
-second last transform and last transform respectively. This will be updated soon!*
+*N.B. bonsai trigger plots can be viewed by using the bonsai dedisperser 
+in the v12_devel branch of rf_pipelines, but this has not been throughly 
+tested! Bonsai plots produced using the old bonsai dedisperser will be 
+displayed in a nonsensical fashion!*
 
 This isn't the prettiest image viewer around, but my goal is to make it as 
 useful as possible for digesting pipeline outputs and sharing results!
