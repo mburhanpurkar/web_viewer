@@ -319,7 +319,7 @@ class View(FlaskView):
         for i, trigger in enumerate(triggerList[zoom]):
             temp = url_for('static', filename='plots/%s/%s/%s' % (user, run, trigger))
             if i > 1 and i < self.max_index[-1][zoom] - 2:
-                temp_link = url_for('View:show_tiles', user=user, run=run, zoom=zoom, index1=i - 2, index2=i + 2)
+                temp_link = url_for('View:show_tiles', user=user, run=run, zoom=zoom, index1=i - 2, index2=i + 1)
                 display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
             else:
                 display += '<td><img src="%s"></td>' % temp
@@ -354,7 +354,7 @@ class View(FlaskView):
         for i, trigger in enumerate(triggerList[zoom]):
             temp = url_for('static', filename='plots/%s/%s/%s' % (user, run, trigger))
             if i > 1 and i < self.max_index[-1][zoom] - 2:
-                temp_link = url_for('View:show_tiles', user=user, run=run, zoom=zoom, index1=i - 2, index2=i + 2)
+                temp_link = url_for('View:show_tiles', user=user, run=run, zoom=zoom, index1=i - 2, index2=i + 1)
                 display += '<td><a href="%s"><img src="%s"></a></td>' % (temp_link, temp)
             else:
                 display += '<td><img src="%s"></td>' % temp
@@ -400,4 +400,4 @@ class View(FlaskView):
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
     View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=False)
