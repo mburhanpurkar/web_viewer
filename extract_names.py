@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from os import walk
+from os.path import isfile
 from json import loads
 from math import ceil
 from flask import Flask, url_for
@@ -135,7 +136,7 @@ class Crawler():
         for user in walk(path).next()[1]:
             temp_usr_data = dict()
             for run in walk('%s/%s' % (path, user)).next()[1]:
-                if run[0] != '_':   # don't include in-progress pipeline runs
+                if run[0] != '_' and isfile('static/plots/' + user + '/' + run + '/rf_pipeline_0.json'):  
                     temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
             pipeline_dir[user] = temp_usr_data
         return pipeline_dir
