@@ -191,9 +191,9 @@ class View(FlaskView):
                 # Add to existing list
                 sorted_runs[prefix].append(run)
 
-        for prefix in sorted_runs:
+        for prefix in sorted(sorted_runs):
             display += '<h4>%s</h4>' % prefix
-            for run in sorted_runs[prefix]:
+            for run in sorted(sorted_runs[prefix]):
                 display += '<h5>%s</h5>' % run[-17:]
                 display += '<li><a href="%s">Show Tiles</a>\n' % url_for('View:show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
                 display += '<li><a href="%s">Show Triggers</a>\n' % url_for('View:show_triggers', user=user, run=run, zoom=0)
@@ -385,6 +385,7 @@ class View(FlaskView):
         # one transform happened to output more than the rest). This means
         # we need to check again when we are displaying each individual
         # image whether it exists.
+
         if zoom >= self.max_zoom or zoom < self.min_zoom or index < self.min_index or index >= max([element[zoom] for element in self.max_index]):
             return False
         return True
@@ -400,4 +401,4 @@ class View(FlaskView):
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
     View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5001, debug=False)
