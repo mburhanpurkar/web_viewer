@@ -240,12 +240,15 @@ class View(FlaskView):
         
         self._get_run_info(user, run)
 
-        print self._get_run_info(user, run)
-        print '*********fnames',  self.fnames
         if self.fnames is None:
             return 'No files found.'
 
-        zoom = int(zoom)
+        if self.max_index is None:
+            s = 'The number of zoom levels produced by the pipeline plotter was unequal to the number of plots produced ' \
+                'by the bonsai plotter. This pipeline run cannot be displayed.'
+            return s
+        
+        zoom= int(zoom)
         index1 = int(index1)
         index2 = int(index2)
 
@@ -336,6 +339,11 @@ class View(FlaskView):
         if self.fnames is None:
             return 'No files found.'
 
+        if self.max_index is None:
+            s = 'The number of zoom levels produced by the pipeline plotter was unequal to the number of plots produced ' \
+                'by the bonsai plotter. This pipeline run cannot be displayed.'
+            return s
+
         zoom = int(zoom)
 
         triggerList = self.fnames[-2]
@@ -370,6 +378,11 @@ class View(FlaskView):
         
         if self.fnames is None:
             return 'No files found.'
+
+        if self.max_index is None:
+            s = 'The number of zoom levels produced by the pipeline plotter was unequal to the number of plots produced ' \
+                'by the bonsai plotter. This pipeline run cannot be displayed.'
+            return s
 
         zoom = int(zoom)
 
@@ -431,6 +444,5 @@ class View(FlaskView):
 
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
-    print master_directories
     View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
     app.run(host='0.0.0.0', port=5001, debug=False)
