@@ -1,10 +1,4 @@
 # Web Viewer for the L1 Pipeline
-*N.B. bonsai trigger plots can be viewed by using the bonsai dedisperser 
-in the v12_devel branch of rf_pipelines. Bonsai plots produced using the 
-old bonsai dedisperser will be displayed in a nonsensical fashion! Note 
-also that the number of zoom levels produced by the mid-pipeline plotter 
-must be the same as the number of zoom levels produced by the boinsai 
-plotter.*
 
 This isn't the prettiest image viewer around, but my goal is to make it as 
 useful as possible for digesting pipeline outputs and sharing results!
@@ -24,9 +18,10 @@ example, the following script:
 <pre><code>
 import ch_frb_rfi
 
-p = ch_frb_rfi.transform_parameters(plot_type='web_viewer')
-t = ch_frb_rfi.transform_chain(p)
+p = ch_frb_rfi.transform_parameters(plot_type='web_viewer', bonsai_output_plot_stem='triggers')
 s = ch_frb_rfi.acquisitions.small()
+t = ch_frb_rfi.transform_chain(p)
+t += [ ch_frb_rfi.bonsai.make_dedisperser(p, 'bonsai_config1.hdf5') ]
 
 ch_frb_rfi.run_for_web_viewer('test-run', s, t)
 </code></pre>
