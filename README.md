@@ -1,8 +1,10 @@
 # Web Viewer for the L1 Pipeline
 *N.B. bonsai trigger plots can be viewed by using the bonsai dedisperser 
-in the v12_devel branch of rf_pipelines, but this has not been throughly 
-tested! Bonsai plots produced using the old bonsai dedisperser will be 
-displayed in a nonsensical fashion!*
+in the v12_devel branch of rf_pipelines. Bonsai plots produced using the 
+old bonsai dedisperser will be displayed in a nonsensical fashion! Note 
+also that the number of zoom levels produced by the mid-pipeline plotter 
+must be the same as the number of zoom levels produced by the boinsai 
+plotter.*
 
 This isn't the prettiest image viewer around, but my goal is to make it as 
 useful as possible for digesting pipeline outputs and sharing results!
