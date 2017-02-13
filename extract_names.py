@@ -48,11 +48,11 @@ class Parser():
     """
     def __init__(self, path):
         self.fnames, self.ftimes = self._get_files(path)
-        if self.fnames is not None:
+        if self.fnames is not None and self._check_zoom():
             self.min_zoom, self.min_index = 0, 0
             self.max_zoom = len(self.fnames[0])
             self.max_index = [[len(zoom) for zoom in transform] for transform in self.fnames]
-        else:   # In case a directory does not contain plots (e.g. a directory with only trigger plots)
+        else:   # In case a directory does not contain plots or transforms contain a different number of zoom levels
             self.min_zoom, self.min_index = None, None
             self.max_zoom = None
             self.max_index = None
@@ -109,12 +109,29 @@ class Parser():
         else:
             return None, None
 
+    def _check_zoom(self):
+        if self.fnames is None:
+            return False
+        a = len(self.fnames[0])
+        for element in self.fnames:
+            if len(element) != a:
+                return False
+        return True
+
     def __str__(self):
         s = ''
+        if self.fnames is None:
+            return 'None\n'
+        tf_counter = 0
         for tf_group in self.fnames:
+            s+= '* TRANSFORM ' + str(tf_counter) + ' *\n'
+            tf_counter += 1
+            zoom_counter = 0
             for zoom_group in tf_group:
+                s += 'ZOOM ' + str(zoom_counter) + '\n'
+                zoom_counter += 1
                 for file in zoom_group:
-                    s += str(file[0]) + ' '
+                    s += str(file) + ' '
                 s += '\n'
             s += '\n\n'
         return s
@@ -140,6 +157,18 @@ class Crawler():
                     temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
             pipeline_dir[user] = temp_usr_data
         return pipeline_dir
+
+    def __str__(self):
+        s = ""
+        for user in self.pipeline_dir:
+            if user == "mburhanpurkar":
+                s += '*' * 160 + '\n'
+                s += "USER: %s\n" % user
+                for run in self.pipeline_dir[user]:
+                    s += '-' * 160 + '\n'
+                    s +=  "RUN: %s\n" % run
+                    s += self.pipeline_dir[user][run].__str__()
+        return s
 
 
 class View(FlaskView):
@@ -211,6 +240,8 @@ class View(FlaskView):
         
         self._get_run_info(user, run)
 
+        print self._get_run_info(user, run)
+        print '*********fnames',  self.fnames
         if self.fnames is None:
             return 'No files found.'
 
@@ -400,5 +431,6 @@ class View(FlaskView):
 
 if __name__ == '__main__':
     master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
+    print master_directories
     View.register(app)                 # it is only accessed in the _get_run_info method, index, and runs. And now update_directories. Oh well. 
     app.run(host='0.0.0.0', port=5001, debug=False)
