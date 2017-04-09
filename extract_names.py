@@ -421,7 +421,7 @@ def update_directories():
     global master_directories
     master_directories = Crawler()
     # Provide link to user page
-    display = '<center><p>Directories Updated!</p><p><a href="%s">Back to Users Page</a></p></center>' % url_for('View:index')
+    display = '<center><p>Directories Updated!</p><p><a href="%s">Back to Users Page</a></p></center>' % url_for('index')
     return display
 
 def _check_set(user, run, zoom, index):
