@@ -21,7 +21,6 @@ A persistent web viewer is running from the web_viewer account, and is up at frb
 
 DEPENDENCIES
 Flask (pip install Flask)
-Flask-Classy (pip install flask-classy)
 
 SETUP
 In your web_viewer directory, 
@@ -33,9 +32,9 @@ RUNNING
     ./extract_names.py
 
 The Index page is at: localhost:5001/ for development! 
-    (Note: the class is called View because classy makes the base url the prefix to "View" in the class name.)
     Show tiles - displays all outputted plots (default: zoom 0, index1 0, index2 4)
-    Show triggers - displays all triggers at a specified zoom (defult: 0)
+    Show triggers - displays all triggers at a specified zoom - must be modified from url (defult: 0)
+    Show last transform - same as show triggers, but for the last plotter transform
 """
 
 
@@ -79,29 +78,41 @@ class Parser():
         
         for transform in transforms_list:
             # This will iterate over all the transforms
-            if ('plotter_transform' in transform['name'] and 'plots' in transform) or ('bonsai_dedisperser' in transform['name'] and 'plots' in transform and 'n_plot_groups' not in transform):
-                # Start a new list for a new transform
-                ftransform_group = []
-                ttransform_group = []
-                for zoom_level in transform['plots']:
-                    # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
-                    fzoom_group = []
-                    tzoom_group = []
-                    group_it0 = zoom_level['it0']
-                    for file_info in zoom_level['files'][0]:
-                        # We can finally access the file names :)
-                        name = file_info['filename']
-                        time = (group_it0 + file_info['it0']) * s_per_sample + json_data['t0']   # start time of the plot in seconds
-                        fzoom_group.append(name)
-                        tzoom_group.append(time)
-                    ftransform_group.append(fzoom_group)
-                    ttransform_group.append(tzoom_group)
-                # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
-                # most-zoomed-out. The web viewer uses the opposite convention, so we reverse the order here.
-                ftransform_group.reverse()
-                ttransform_group.reverse()
-                fnames.append(ftransform_group)
-                ftimes.append(ttransform_group)
+            if ('plotter_transform' in transform['name'] and 'plots' in transform) or \
+                ('bonsai_dedisperser' in transform['name'] and 'plots' in transform and 'n_plot_groups' not in transform):
+                nloops = 1
+            elif 'bonsai_dedisperser' in transform['name'] and 'plots' in transform and 'n_plot_groups' in transform:
+                nloops = transform['n_plot_groups']
+            else:
+                nloops = -1
+
+            if nloops != -1:
+                n = 0
+                group_size = len(transform['plots']) / nloops
+                while n < nloops:
+                    # Start a new list for a new transform
+                    ftransform_group = []
+                    ttransform_group = []
+                    for zoom_level in transform['plots'][n:n+group_size]:
+                        # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
+                        fzoom_group = []
+                        tzoom_group = []
+                        group_it0 = zoom_level['it0']
+                        for file_info in zoom_level['files'][0]:
+                            # We can finally access the file names :)
+                            name = file_info['filename']
+                            time = (group_it0 + file_info['it0']) * s_per_sample + json_data['t0']   # start time of the plot in seconds
+                            fzoom_group.append(name)
+                            tzoom_group.append(time)
+                        ftransform_group.append(fzoom_group)
+                        ttransform_group.append(tzoom_group)
+                    # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
+                    # most-zoomed-out. The web viewer uses the opposite convention, so we reverse the order here.
+                    ftransform_group.reverse()
+                    ttransform_group.reverse()
+                    fnames.append(ftransform_group)
+                    ftimes.append(ttransform_group)
+                    n += 1
 
         if len(fnames) != 0:
             return fnames, ftimes
