@@ -269,7 +269,7 @@ def show_tiles(user, run, zoom, index1, index2):
         # First, add plot times 
         for index in range(index1, index2 + 1):
             if _check_image(user, run, transform, zoom, index):
-                display += '<td>%s</td>' % fnames[transform][zoom][index]#ftimes[transform][zoom][index]
+                display += '<td>%s</td>' % ftimes[transform][zoom][index]
         display += '</tr>'
         # Now, add the images
         for index in range(index1, index2 + 1):
