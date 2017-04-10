@@ -79,7 +79,7 @@ class Parser():
         
         for transform in transforms_list:
             # This will iterate over all the transforms
-            if ('plotter_transform' in transform['name'] and 'plots' in transform) or ('bonsai_dedisperser' in transform['name'] and 'plots' in transform):
+            if ('plotter_transform' in transform['name'] and 'plots' in transform) or ('bonsai_dedisperser' in transform['name'] and 'plots' in transform and 'n_plot_groups' not in transform):
                 # Start a new list for a new transform
                 ftransform_group = []
                 ttransform_group = []
@@ -250,10 +250,6 @@ def show_tiles(user, run, zoom, index1, index2):
             'by the bonsai plotter. This pipeline run cannot be displayed.'
         return s
 
-#    zoom = int(zoom)
-#    index1 = int(index1)
-#    index2 = int(index2)
-
     display = '<h3>Displaying Plots %d-%d at Zoom %d</h3>' % (index1, index2, (max_zoom - zoom - 1))  # account for resversal of zoom order in plotter
     display += '<table cellspacing="0" cellpadding="0">'
 
@@ -347,8 +343,6 @@ def show_last_transform(user, run, zoom):
         s = 'The number of zoom levels produced by the pipeline plotter was unequal to the number of plots produced ' \
             'by the bonsai plotter. This pipeline run cannot be displayed.'
         return s
-
-#    zoom = int(zoom)
 
     triggerList = fnames[-2]
     display = '<h3>Displaying Last Transform Plots at Zoom %s</h3>' % (max_zoom - zoom - 1)
@@ -446,6 +440,5 @@ def _check_image(user, run, transform, zoom, index):
     return True
 
 
-#if __name__ == '__main__':
 master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
-#    app.run(host='0.0.0.0')
+
