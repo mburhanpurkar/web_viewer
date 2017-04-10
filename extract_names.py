@@ -89,7 +89,7 @@ class Parser():
             if nloops != -1:
                 n = 0
                 group_size = len(transform['plots']) / nloops
-                while n < nloops:
+                while n < len(transform['plots']):
                     # Start a new list for a new transform
                     ftransform_group = []
                     ttransform_group = []
@@ -112,7 +112,7 @@ class Parser():
                     ttransform_group.reverse()
                     fnames.append(ftransform_group)
                     ftimes.append(ttransform_group)
-                    n += 1
+                    n += group_size
 
         if len(fnames) != 0:
             return fnames, ftimes
@@ -269,7 +269,7 @@ def show_tiles(user, run, zoom, index1, index2):
         # First, add plot times 
         for index in range(index1, index2 + 1):
             if _check_image(user, run, transform, zoom, index):
-                display += '<td>%s</td>' % ftimes[transform][zoom][index]
+                display += '<td>%s</td>' % fnames[transform][zoom][index]#ftimes[transform][zoom][index]
         display += '</tr>'
         # Now, add the images
         for index in range(index1, index2 + 1):
