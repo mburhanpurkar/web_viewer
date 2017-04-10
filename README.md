@@ -83,11 +83,3 @@ allow you to see that section of the pipeline run in more detail.
 Show Last Transform has precisely the same functionality as Show Triggers, but it dislays the 
 outputs of the final (non-bonsai) plotter transform that was run.
 
-
-### Challenges
-- For simplicity, the web viewer is currently implemented in Flask, which doesn't appear
-  to be the hardiest of web servers. Occasional slow downs sometimes require that you 
-  click a link a couple times before the page loads.
-- There have been a few cases in which the web viewer appears to become overloaded and 
-  fails to load pages entirely. The only solution so far has been to reset the web 
-  viewer entirely. We're in the process of setting up something more robust now!
