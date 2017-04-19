@@ -87,7 +87,9 @@ class Parser():
             else:
                 nloops = -1
 
-            if nloops != -1:
+            # This is for the regular plotter transform or the bonsai transform with only one zoom level. This will just 
+            # index everything as normal. 
+            if nloops == 1:
                 n = 0
                 group_size = len(transform['plots']) / nloops
                 while n < len(transform['plots']):
@@ -114,6 +116,42 @@ class Parser():
                     fnames.append(ftransform_group)
                     ftimes.append(ttransform_group)
                     n += group_size
+
+            # This is for a bonsai transform that plots multiple trees. We need to reverse the list at the beginning so that tree 0
+            # shows up in the first row and remove the reversals at the end so the zoom levels are displayed properly. A bit of an
+            # ugly hack, but it works. 
+            if nloops > 1:
+                n = 0
+                group_size = len(transform['plots']) / nloops
+                transform['plots'].reverse()
+                while n < len(transform['plots']):
+                    # Start a new list for a new transform
+                    ftransform_group = []
+                    ttransform_group = []
+                    for zoom_level in transform['plots'][n:n+group_size]:
+                        # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
+                        fzoom_group = []
+                        tzoom_group = []
+                        group_it0 = zoom_level['it0']
+                        for file_info in zoom_level['files'][0]:
+                            # We can finally access the file names :)
+                            name = file_info['filename']
+                            time = (group_it0 + file_info['it0']) * s_per_sample + json_data['t0']   # start time of the plot in seconds
+                            fzoom_group.append(name)
+                            tzoom_group.append(time)
+                        ftransform_group.append(fzoom_group)
+                        ttransform_group.append(tzoom_group)
+                    # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
+                    # most-zoomed-out. The web viewer uses the opposite convention, so we reverse the order here.
+                    ftransform_group
+                    ttransform_group
+                    fnames.append(ftransform_group)
+                    ftimes.append(ttransform_group)
+                    n += group_size
+
+            if nloops > 1:
+                # It is using the new bonsai plotter, so we must reverse the order of the transforms so tree 0 shows up first
+                pass
 
         if len(fnames) != 0:
             return fnames, ftimes
