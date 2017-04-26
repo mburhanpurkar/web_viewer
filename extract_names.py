@@ -207,6 +207,14 @@ class Crawler():
             pipeline_dir[user] = temp_usr_data
         return pipeline_dir
 
+    def _update_user(self, user):
+        temp_usr_data = dict()
+        for run in walk('%s/%s' % (path, user)).next()[1]:
+            if run[0] != '_' and isfile('static/plots/' + user + '/' + run + '/rf_pipeline_0.json'):
+                temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
+            pipeline_dir[user] = temp_usr_data
+        return
+
     def __str__(self):
         s = ""
         for user in self.pipeline_dir:
@@ -251,6 +259,7 @@ def index():
         display += '<li><a href="%s">%s</a>\n' % (url_for('runs', user=key), key)
     display += '<p><a href="%s">Don\'t see your directory? Click here to update.</a></p>' % url_for('update_directories')
     display += '<p><a href="https://github.com/mburhanpurkar/web_viewer">Instructions / Help / Documentation</a></p>'
+    display += '<p>Exciting news! The update directories button on your runs page now only updates your directories, meaning it will be much faster (unless you\'re Masoud)!</p>'
     return display
 
 @app.route("/<string:user>/runs")
@@ -278,7 +287,7 @@ def runs(user):
             display += '<li><a href="%s">Show Triggers</a>\n' % url_for('show_triggers', user=user, run=run, zoom=0)
             display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('show_last_transform', user=user, run=run, zoom=0)
     display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
-               % (url_for('index'), url_for('update_directories'))
+               % (url_for('index'), url_for('update_your_directories', user=user))
     return display
 
 @app.route("/<string:user>/<string:run>/show_tiles/<int:zoom>/<int:index1>/<int:index2>")
@@ -466,6 +475,13 @@ def update_directories():
     # Provide link to user page
     display = '<center><p>Directories Updated!</p><p><a href="%s">Back to Users Page</a></p></center>' % url_for('index')
     return display
+
+@app.route("/update_directories/<string:user>")
+def update_your_directories(user):
+    """Runs update_directories, but only for the specified user to speed things up."""
+    global master_directories
+    master_directories._update_user(user)
+    display =  '<center><p>Directories updated for %s!</p><p><a href="%s">Back to your runs</a></p></center>' % (user, url_for('runs', user=user))
 
 def _check_set(user, run, zoom, index):
     """Checks whether a link should be added at the top of the page to the next set of images in the series."""
