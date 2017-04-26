@@ -259,9 +259,11 @@ def index():
     display = '<h3>Users</h3>'
     for key in sorted(master_directories.pipeline_dir):
         display += '<li><a href="%s">%s</a>\n' % (url_for('runs', user=key), key)
-    display += '<p><a href="%s">Don\'t see your directory? Click here to update.</a></p>' % url_for('update_directories')
+    display += '<p>**Exciting news! The update directories button on your runs page now only updates your directories, meaning updating your \
+               directories will no longer take an obscene 15 seconds (unless you\'re Masoud)! The button is now conveniently located at the top \
+               of the page and points to your runs page after it is finished! Yay!**</p>'
+    display += '<p><a href="%s">Click here to update all users\'s directories.</a></p>' % url_for('update_directories')
     display += '<p><a href="https://github.com/mburhanpurkar/web_viewer">Instructions / Help / Documentation</a></p>'
-    display += '<p>Exciting news! The update directories button on your runs page now only updates your directories, meaning it will be much faster (unless you\'re Masoud)!</p>'
     return display
 
 @app.route("/<string:user>/runs")
@@ -269,6 +271,8 @@ def runs(user):
     """Displays links to the pipeline runs for a particular user."""
 
     display = '<h3>%s\'s pipeline runs</h3>' % user
+    display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
+               % (url_for('index'), url_for('update_your_directories', user=user))
 
     # Sort runs by prefix {prefix1: [run1, run2, run3, ...], prefix2: [...], ...}
     sorted_runs = dict()
@@ -288,8 +292,6 @@ def runs(user):
             display += '<li><a href="%s">Show Tiles</a>\n' % url_for('show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
             display += '<li><a href="%s">Show Triggers</a>\n' % url_for('show_triggers', user=user, run=run, zoom=0)
             display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('show_last_transform', user=user, run=run, zoom=0)
-    display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
-               % (url_for('index'), url_for('update_your_directories', user=user))
     return display
 
 @app.route("/<string:user>/<string:run>/show_tiles/<int:zoom>/<int:index1>/<int:index2>")
