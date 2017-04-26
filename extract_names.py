@@ -195,25 +195,27 @@ class Crawler():
     at some point. Could just be added to Parser if not. 
     """
     def __init__(self, path='static/plots'):
-        self.pipeline_dir = self._get_dirs(path)    
+        self.path = path
+        self.pipeline_dir = self._get_dirs()
 
-    def _get_dirs(self, path):
+    def _get_dirs(self):
         pipeline_dir = dict()
-        for user in walk(path).next()[1]:
+        for user in walk(self.path).next()[1]:
             temp_usr_data = dict()
-            for run in walk('%s/%s' % (path, user)).next()[1]:
+            for run in walk('%s/%s' % (self.path, user)).next()[1]:
                 if run[0] != '_' and isfile('static/plots/' + user + '/' + run + '/rf_pipeline_0.json'):  
                     temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
             pipeline_dir[user] = temp_usr_data
         return pipeline_dir
 
     def _update_user(self, user):
+#        global master_directories
         temp_usr_data = dict()
-        for run in walk('%s/%s' % (path, user)).next()[1]:
+        for run in walk('%s/%s' % (self.path, user)).next()[1]:
             if run[0] != '_' and isfile('static/plots/' + user + '/' + run + '/rf_pipeline_0.json'):
                 temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
-            pipeline_dir[user] = temp_usr_data
-        return
+#            self.pipeline_dir[user] = temp_usr_data
+        return temp_usr_data
 
     def __str__(self):
         s = ""
@@ -480,8 +482,9 @@ def update_directories():
 def update_your_directories(user):
     """Runs update_directories, but only for the specified user to speed things up."""
     global master_directories
-    master_directories._update_user(user)
+    master_directories.pipeline_dir[user] = master_directories._update_user(user)
     display =  '<center><p>Directories updated for %s!</p><p><a href="%s">Back to your runs</a></p></center>' % (user, url_for('runs', user=user))
+    return display
 
 def _check_set(user, run, zoom, index):
     """Checks whether a link should be added at the top of the page to the next set of images in the series."""
