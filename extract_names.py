@@ -209,12 +209,12 @@ class Crawler():
         return pipeline_dir
 
     def _update_user(self, user):
-#        global master_directories
+        """This will just return the information to be added to the section of the dictionary for a particular user, 
+        not a whole new dictionary of parser instances, as _get_dirs does."""
         temp_usr_data = dict()
         for run in walk('%s/%s' % (self.path, user)).next()[1]:
             if run[0] != '_' and isfile('static/plots/' + user + '/' + run + '/rf_pipeline_0.json'):
                 temp_usr_data[run] = Parser('static/plots/%s/%s' % (user, run))
-#            self.pipeline_dir[user] = temp_usr_data
         return temp_usr_data
 
     def __str__(self):
