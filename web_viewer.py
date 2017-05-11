@@ -288,7 +288,7 @@ def runs(user):
     for prefix in sorted(sorted_runs):
         display += '<h4>%s</h4>' % prefix
         for run in sorted(sorted_runs[prefix]):
-            display += '<h5>%s</h5>' % run[-17:]
+            display += '<h5><a href="%s">%s</a></h5>' % (url_for('run_page', user=user, run=run), run[-17:])
             display += '<li><a href="%s">Show Tiles</a>\n' % url_for('show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
             display += '<li><a href="%s">Show Triggers</a>\n' % url_for('show_triggers', user=user, run=run, zoom=0)
             display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('show_last_transform', user=user, run=run, zoom=0)
@@ -486,6 +486,26 @@ def update_your_directories(user):
     global master_directories
     master_directories.pipeline_dir[user] = master_directories._update_user(user)
     display =  '<center><p>Directories updated for %s!</p><p><a href="%s">Back to your runs</a></p></center>' % (user, url_for('runs', user=user))
+    return display
+
+@app.route("/<string:user>/<string:run>/")
+def run_page(user, run):
+    """This isn't for use in the web_viewer in its current state. When connected to the L2/L3 viewer, it 
+    will be used to display information for a requested pipeline run. If the run is not found, it will be 
+    searched for."""
+    # First, check whether the run exists - if it doesn't, we need to search for it and add it to our dictionary! 
+    # (this is meant for use with L2, when someone would like to view web_viewer images for a particular pipeline run 
+    # - it would be impractical and unnecessary to constantly update the database for the L1 viewer whenever a pipeline
+    # run is completed)
+    if run not in master_directories.pipeline_dir[str(user)]:
+        global master_directories
+        master_directories.pipeline_dir[user] = master_directories._update_user(user)
+    if run not in master_directories.pipeline_dir[str(user)]:
+        return "The run was not found."
+    display = '<h4>%s</h4>' % run
+    display += '<li><a href="%s">Show Tiles</a>\n' % url_for('show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
+    display += '<li><a href="%s">Show Triggers</a>\n' % url_for('show_triggers', user=user, run=run, zoom=0)
+    display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('show_last_transform', user=user, run=run, zoom=0)
     return display
 
 def _check_set(user, run, zoom, index):
