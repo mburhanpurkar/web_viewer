@@ -8,12 +8,11 @@ app = Flask(__name__)
 
 
 """
-NB For now, we are assuming the bonsai transform is the final plot-producing transform in the pipeline run!
+This is web viewer for the L1 pipeline. Currently, it retrieves files from the /data2/web_viewer directory, 
+but it can be easily modified to get files from multiple machines. Running the web viewer will display
+a list of users, each with a list of pipeline runs in their directories.
 
-This is a modified version of the web viewer that works for the new plotter and the /data2/web_viewer 
-directory. Running will display a list of users, each with a list of pipeline runs in their directories.
-
-A persistent web viewer is running from the web_viewer account, and is up at frb1.physics.mcgill.ca:5000/!
+A persistent web viewer is running from the frb1 web_viewer account, and is up at frb1.physics.mcgill.ca:5000/!
     Show tiles - displays all outputted plots (default: zoom 0*, index1 0, index2 4)
     Show triggers - displays all triggers at a specified zoom - must be modified from url (defult: 0)
     Show last transform - same as show triggers, but for the last plotter transform (note this will display
@@ -41,25 +40,26 @@ RUNNING
 
 class Parser():
     """
-    This gets fnames (the list of file names at different zoom levels produced by the plotter transforms)
-    and helpful min/max index and zoom values by reading from the json file. This is called upon initialization
-    and whenever the update directories page is navigated to. 
+    This gets the list of file names at different zoom levels produced by the plotter transforms, and reads 
+    all information relevant to displaying the required images (min/max index and zoom values and timestamps)
+    for an individual pipeline run. This is repeatedly called by the Crawler() class as it discovers new 
+    users and pipeline run directories. 
     """
     def __init__(self, path):
-        self.fnames, self.ftimes = self._get_files(path)
+        # First, read everything in /data2/web_viewer, and extract file names and timestamps
+        self.fnames, self.ftimes = self._get_files(path) 
+
+        # Calculate some useful values for the viewer, given a successful run
         if self.fnames is not None and self._check_zoom():
             self.min_zoom, self.min_index = 0, 0
             self.max_zoom = len(self.fnames[0])
             self.max_index = [[len(zoom) for zoom in transform] for transform in self.fnames]
-        else:   # In case a directory does not contain plots or transforms contain a different number of zoom levels
+
+        # In case a directory does not contain plots or transforms contain a different number of zoom levels
+        else:
             self.min_zoom, self.min_index = None, None
             self.max_zoom = None
             self.max_index = None
-        
-        # Helpful for debug:
-        # print "Len fnames (num transforms):  ", len(self.fnames)
-        # print "Len fnames[0] (num zooms):    ", len(self.fnames[0])
-        # print "Len fnames[0][0] (num tiles): ", len(self.fnames[0][0])
         
     def _get_files(self, path):
         """Outputs a list of plot filenames and plot start times as a tuple based on the .json file produced from 
@@ -71,8 +71,8 @@ class Parser():
         json_file = open(path + '/rf_pipeline_0.json').read()
         json_data = loads(json_file)
         transforms_list = json_data['transforms']
-        fnames = []
-        ftimes = []
+        fnames = []  # stores file names (so the viewer can request them)
+        ftimes = []  # stores timestamps (to be displayed for chime_stream_from_times())
 
         s_per_sample = (json_data['t1'] - json_data['t0']) / json_data['nsamples']  # number of seconds per sample
         
@@ -85,37 +85,33 @@ class Parser():
             elif 'bonsai_dedisperser' in transform['name'] and 'plots' in transform and 'n_plot_groups' in transform:
                 nloops = transform['n_plot_groups']
             else:
-                nloops = -1
+                nloops = -1  # ignore the json field! 
 
-            # This is for the regular plotter transform or the bonsai transform with only one zoom level. This will just 
+            # This is for the regular plotter transform or the bonsai transform with only one tree. This will just 
             # index everything as normal. 
             if nloops == 1:
-                n = 0
-                group_size = len(transform['plots']) / nloops
-                while n < len(transform['plots']):
-                    # Start a new list for a new transform
-                    ftransform_group = []
-                    ttransform_group = []
-                    for zoom_level in transform['plots'][n:n+group_size]:
-                        # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
-                        fzoom_group = []
-                        tzoom_group = []
-                        group_it0 = zoom_level['it0']
-                        for file_info in zoom_level['files'][0]:
-                            # We can finally access the file names :)
-                            name = file_info['filename']
-                            time = (group_it0 + file_info['it0']) * s_per_sample + json_data['t0']   # start time of the plot in seconds
-                            fzoom_group.append(name)
-                            tzoom_group.append(time)
-                        ftransform_group.append(fzoom_group)
-                        ttransform_group.append(tzoom_group)
-                    # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
-                    # most-zoomed-out. The web viewer uses the opposite convention, so we reverse the order here.
-                    ftransform_group.reverse()
-                    ttransform_group.reverse()
-                    fnames.append(ftransform_group)
-                    ftimes.append(ttransform_group)
-                    n += group_size
+                # Start a new list for a new transform
+                ftransform_group = []
+                ttransform_group = []
+                for zoom_level in transform['plots'][:]:
+                    # This iterates over each zoom level (plot group) for a particular plotter transform (list of dictionaries)
+                    fzoom_group = []
+                    tzoom_group = []
+                    group_it0 = zoom_level['it0']
+                    for file_info in zoom_level['files'][0]:
+                        # We can finally access the file names :)
+                        name = file_info['filename']
+                        time = (group_it0 + file_info['it0']) * s_per_sample + json_data['t0']   # start time of the plot in seconds
+                        fzoom_group.append(name)
+                        tzoom_group.append(time)
+                    ftransform_group.append(fzoom_group)
+                    ttransform_group.append(tzoom_group)
+                # The plotter_transform defines zoom_level 0 to be most-zoomed-in, and zoom_level (N-1) to be
+                # most-zoomed-out. The web viewer uses the opposite convention, so we reverse the order here.
+                ftransform_group.reverse()
+                ttransform_group.reverse()
+                fnames.append(ftransform_group)
+                ftimes.append(ttransform_group)
 
             # This is for a bonsai transform that plots multiple trees. We need to reverse the list at the beginning so that tree 0
             # shows up in the first row and remove the reversals at the end so the zoom levels are displayed properly. A bit of an
@@ -149,16 +145,16 @@ class Parser():
                     ftimes.append(ttransform_group)
                     n += group_size
 
-            if nloops > 1:
-                # It is using the new bonsai plotter, so we must reverse the order of the transforms so tree 0 shows up first
-                pass
-
+        # Check whether there was anything of value in the run
         if len(fnames) != 0:
             return fnames, ftimes
         else:
             return None, None
 
     def _check_zoom(self):
+        """Back in the dark days without ch_frb_rfi, you could force the bonsai plotter and the transform plotter
+        to produce a different number of zoom levels! This doesn't make sense, so the web_viewer won't display
+        these runs."""
         if self.fnames is None:
             return False
         a = len(self.fnames[0])
@@ -195,10 +191,11 @@ class Crawler():
     at some point. Could just be added to Parser if not. 
     """
     def __init__(self, path='static/plots'):
-        self.path = path
+        self.path = path  # path is the directory symlinked to the web_viewer directory
         self.pipeline_dir = self._get_dirs()
 
     def _get_dirs(self):
+        """Steps through all the user directories and pipeline runs, calling Parser() for each."""
         pipeline_dir = dict()
         for user in walk(self.path).next()[1]:
             temp_usr_data = dict()
@@ -231,7 +228,9 @@ class Crawler():
 
 
 """
-Class for the web viewer application. 
+This used to be a class for the web_viewer application, but I soon found that Flask Classy doesn't 
+interface properly with wsgi :'( Now, it is merely a collection of functions for loading pages of the 
+web_viewer.
 
 The index page shows a list of users, with links to each of the pipeline runs they have done (runs). 
 Show tiles shows all the plots produced by the plotter transform for a particular pipeline run. 
@@ -243,7 +242,8 @@ If __init__ is present, it will be called once for each page when the viewer sta
 __init__ method). 
 """
 def _get_run_info(user, run):
-    # Get parser object for corresponding user/run
+    # Get parser object for corresponding user/run (since this is no longer a class, I 
+    # don't think there's a better way to do this)
     fnames = master_directories.pipeline_dir[user][run].fnames
     ftimes = master_directories.pipeline_dir[user][run].ftimes
     min_zoom = master_directories.pipeline_dir[user][run].min_zoom
@@ -511,4 +511,3 @@ def _check_image(user, run, transform, zoom, index):
 
 
 master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
-
