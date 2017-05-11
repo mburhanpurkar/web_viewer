@@ -1,5 +1,5 @@
-from extract_names import app
-from extract_names import Parser, Crawler
+from web_viewer import app
+from web_viewer import Crawler
 
 if __name__ == "__main__":
     master_directories = Crawler()
