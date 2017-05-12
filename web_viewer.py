@@ -271,7 +271,7 @@ def runs(user):
     """Displays links to the pipeline runs for a particular user."""
 
     display = '<h3>%s\'s pipeline runs</h3>' % user
-    display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>>' % url_for('index')
+    display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;]' % url_for('index')
 
     # Sort runs by prefix {prefix1: [run1, run2, run3, ...], prefix2: [...], ...}
     sorted_runs = dict()
