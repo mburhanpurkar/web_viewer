@@ -216,6 +216,7 @@ class Crawler():
 
     def __str__(self):
         s = ""
+        # For not writing out a ridiculous amount of information when trying to debug
         for user in self.pipeline_dir:
             if user == "mburhanpurkar":
                 s += '*' * 160 + '\n'
