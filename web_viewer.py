@@ -263,12 +263,6 @@ def index():
     for user in walk(path).next()[1]:
         display += '<li><a href="%s">%s</a>\n' % (url_for('runs', user=user), user)
 
-#    for key in sorted(master_directories.pipeline_dir):
-#        display += '<li><a href="%s">%s</a>\n' % (url_for('runs', user=key), key)
-    display += '<p>**Exciting news! The update directories button on your runs page now only updates your directories, meaning updating your \
-               directories will no longer take an obscene 15 seconds (unless you\'re Masoud)! The button is now conveniently located at the top \
-               of the page and points to your runs page after it is finished! Yay!**</p>'
-    display += '<p><a href="%s">Click here to update all users\'s directories.</a></p>' % url_for('update_directories')
     display += '<p><a href="https://github.com/mburhanpurkar/web_viewer">Instructions / Help / Documentation</a></p>'
     return display
 
@@ -277,14 +271,12 @@ def runs(user):
     """Displays links to the pipeline runs for a particular user."""
 
     display = '<h3>%s\'s pipeline runs</h3>' % user
-    display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>&nbsp;&nbsp;&nbsp;<a href="%s">Update Directories</a>&nbsp;&nbsp;&nbsp;]</p>' \
-               % (url_for('index'), url_for('update_your_directories', user=user))
+    display += '<p>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to List of Users</a>>' % url_for('index')
 
     # Sort runs by prefix {prefix1: [run1, run2, run3, ...], prefix2: [...], ...}
     sorted_runs = dict()
     for run in walk(path + '/' + user).next()[1]:
         if exists(path + '/' + user + '/' + run + '/' + 'rf_pipeline_0.json'):
-            #    for run in master_directories.pipeline_dir[str(user)]:
             prefix = run[:-18]
             if prefix not in sorted_runs:
                 # We need to add a new key
@@ -296,7 +288,7 @@ def runs(user):
     for prefix in sorted(sorted_runs):
         display += '<h4>%s</h4>' % prefix
         for run in sorted(sorted_runs[prefix]):
-            display += '<h5><a href="%s">%s</a></h5>' % (url_for('run_page', user=user, run=run), run[-17:])
+            display += '<h5>%s</h5>' % run[-17:]
             display += '<li><a href="%s">Show Tiles</a>\n' % url_for('show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
             display += '<li><a href="%s">Show Triggers</a>\n' % url_for('show_triggers', user=user, run=run, zoom=0)
             display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('show_last_transform', user=user, run=run, zoom=0)
@@ -309,6 +301,12 @@ def show_tiles(user, run, zoom, index1, index2):
     the url (index1 is the index of the first image shown and index2 is the index of the last 
     and defaults are set to 0 and 4 for the link accessed from the home page). The numbers displayed
     are the time in seconds at the start of the plot."""
+
+    if run not in master_directories.pipeline_dir[str(user)]:
+        global master_directories
+        master_directories.pipeline_dir[user] = master_directories._update_user(user)
+    if run not in master_directories.pipeline_dir[str(user)]:
+        return "The run was not found."
 
     fnames, ftimes, min_zoom, min_index, max_zoom, max_index = _get_run_info(user, run)
 
@@ -404,6 +402,12 @@ def show_last_transform(user, run, zoom):
     """Displays the plots for the last transform at a given zoom horizontally. The zoom level can be changed by 
     changing the value in the url. Currently just indexes the second last value in fnames."""
 
+    if run not in master_directories.pipeline_dir[str(user)]:
+        global master_directories
+        master_directories.pipeline_dir[user] = master_directories._update_user(user)
+    if run not in master_directories.pipeline_dir[str(user)]:
+        return "The run was not found."
+
     fnames, ftimes, min_zoom, min_index, max_zoom, max_index = _get_run_info(user, run)
 
     if fnames is None:
@@ -442,6 +446,12 @@ def show_triggers(user, run, zoom):
     """Displays all trigger plots at a given zoom horizontally. The zoom level can be changed by changing the value in the url. 
     Currently just indexes the last value in fnames."""
 
+    if run not in master_directories.pipeline_dir[str(user)]:
+        global master_directories
+        master_directories.pipeline_dir[user] = master_directories._update_user(user)
+    if run not in master_directories.pipeline_dir[str(user)]:
+        return "The run was not found."
+
     fnames, ftimes, min_zoom, min_index, max_zoom, max_index = _get_run_info(user, run)
 
     if fnames is None:
@@ -475,45 +485,6 @@ def show_triggers(user, run, zoom):
             last_row = current_row
             display += '</tr><tr><td>&nbsp;</td></tr><tr>'
     display += '</tr></table>'
-    return display
-
-@app.route("/update_directories")
-def update_directories():
-    """Going here updates master_directories"""
-    # Update directories... can do this better by re-writing crawler to check for keys
-    # but it's not large enough to warrant doing that for now I think. 
-    global master_directories
-    master_directories = Crawler()
-    # Provide link to user page
-    display = '<center><p>Directories Updated!</p><p><a href="%s">Back to Users Page</a></p></center>' % url_for('index')
-    return display
-
-@app.route("/update_directories/<string:user>")
-def update_your_directories(user):
-    """Runs update_directories, but only for the specified user to speed things up."""
-    global master_directories
-    master_directories.pipeline_dir[user] = master_directories._update_user(user)
-    display =  '<center><p>Directories updated for %s!</p><p><a href="%s">Back to your runs</a></p></center>' % (user, url_for('runs', user=user))
-    return display
-
-@app.route("/<string:user>/<string:run>/")
-def run_page(user, run):
-    """This isn't for use in the web_viewer in its current state. When connected to the L2/L3 viewer, it 
-    will be used to display information for a requested pipeline run. If the run is not found, it will be 
-    searched for."""
-    # First, check whether the run exists - if it doesn't, we need to search for it and add it to our dictionary! 
-    # (this is meant for use with L2, when someone would like to view web_viewer images for a particular pipeline run 
-    # - it would be impractical and unnecessary to constantly update the database for the L1 viewer whenever a pipeline
-    # run is completed)
-    if run not in master_directories.pipeline_dir[str(user)]:
-        global master_directories
-        master_directories.pipeline_dir[user] = master_directories._update_user(user)
-    if run not in master_directories.pipeline_dir[str(user)]:
-        return "The run was not found."
-    display = '<h4>%s</h4>' % run
-    display += '<li><a href="%s">Show Tiles</a>\n' % url_for('show_tiles', user=user, run=run, zoom=0, index1=0, index2=3)
-    display += '<li><a href="%s">Show Triggers</a>\n' % url_for('show_triggers', user=user, run=run, zoom=0)
-    display += '<li><a href="%s">Show Last Transform</a>\n' % url_for('show_last_transform', user=user, run=run, zoom=0)
     return display
 
 def _check_set(user, run, zoom, index):
