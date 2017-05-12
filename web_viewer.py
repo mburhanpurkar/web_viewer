@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from os import walk
-from os.path import isfile
+from os.path import isfile, exists
 from json import loads
 from math import ceil
 from flask import Flask, url_for
@@ -258,8 +258,13 @@ def index():
     """Home page! Links to each of the users' pipeline runs."""
 
     display = '<h3>Users</h3>'
-    for key in sorted(master_directories.pipeline_dir):
-        display += '<li><a href="%s">%s</a>\n' % (url_for('runs', user=key), key)
+
+    # Check for new users
+    for user in walk(path).next()[1]:
+        display += '<li><a href="%s">%s</a>\n' % (url_for('runs', user=user), user)
+
+#    for key in sorted(master_directories.pipeline_dir):
+#        display += '<li><a href="%s">%s</a>\n' % (url_for('runs', user=key), key)
     display += '<p>**Exciting news! The update directories button on your runs page now only updates your directories, meaning updating your \
                directories will no longer take an obscene 15 seconds (unless you\'re Masoud)! The button is now conveniently located at the top \
                of the page and points to your runs page after it is finished! Yay!**</p>'
@@ -277,14 +282,16 @@ def runs(user):
 
     # Sort runs by prefix {prefix1: [run1, run2, run3, ...], prefix2: [...], ...}
     sorted_runs = dict()
-    for run in master_directories.pipeline_dir[str(user)]:
-        prefix = run[:-18]
-        if prefix not in sorted_runs:
-            # We need to add a new key
-            sorted_runs[prefix] = [run]
-        else:
-            # Add to existing list
-            sorted_runs[prefix].append(run)
+    for run in walk(path + '/' + user).next()[1]:
+        if exists(path + '/' + user + '/' + run + '/' + 'rf_pipeline_0.json'):
+            #    for run in master_directories.pipeline_dir[str(user)]:
+            prefix = run[:-18]
+            if prefix not in sorted_runs:
+                # We need to add a new key
+                sorted_runs[prefix] = [run]
+            else:
+                # Add to existing list
+                sorted_runs[prefix].append(run)
 
     for prefix in sorted(sorted_runs):
         display += '<h4>%s</h4>' % prefix
@@ -532,3 +539,4 @@ def _check_image(user, run, transform, zoom, index):
 
 
 master_directories = Crawler()     # dirs contains a dictionary in the form {'user1': {'run1': Parser1, 'run2': Parser2, ...}, ...}
+path = 'static/plots'  # where we will search for users/runs/plots
