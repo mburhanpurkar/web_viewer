@@ -41,7 +41,7 @@ run's name to be a time and will try to group by prefix that way. (The time is
 important to generate a unique link for each pipeline run to prevent browser 
 caching from displaying the incorrect plots!)
 
-Note: uwsgi launch code is `uwsgi --socket 0.0.0.0:5001 --plugin python --protocol=http -w wsgi --callable app`
+Note: uwsgi launch code is `uwsgi --socket 0.0.0.0:5000 --plugin python --protocol=http -w wsgi --callable app --processes=4`
 
 
 ### Tiled Image Viewer
