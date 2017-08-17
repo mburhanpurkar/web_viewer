@@ -418,13 +418,18 @@ def show_last_transform(user, run, zoom):
             'by the bonsai plotter. This pipeline run cannot be displayed.'
         return s
 
-    for i in reversed(xrange(len(fnames))):
-        print fnames[-i - 1][0]
-        if "tree" not in fnames[-i - 1][0]:
+    found = False
+    for i in xrange(len(fnames)):
+        print fnames[-i - 1][0][0]
+        if "tree" not in fnames[-i - 1][0][0] and "triggers" not in fnames[-i - 1][0][0]:
             triggerList = fnames[-i - 1]
+            found = True
+            print "FOUND!!!!!!"
             break
+    if not found:
+        # probably using old naming convention
+        triggerList = fnames[-2]
 
-#    triggerList = fnames[-2]
     display = '<h3>Displaying Last Transform Plots at Zoom %s</h3>' % (max_zoom - zoom - 1)
     display += '<p><center>[&nbsp;&nbsp;&nbsp;<a href="%s">Back to Users List</a>&nbsp;&nbsp;&nbsp;<a href="%s">Back to Your Runs</a>' \
                '&nbsp;&nbsp;&nbsp;]</center></p>' % (url_for('index'), url_for('runs', user=user))
